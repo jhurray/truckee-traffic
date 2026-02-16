@@ -1,0 +1,272 @@
+import { useEffect, useMemo, useRef, useState } from 'react'
+import type Hls from 'hls.js'
+import type { Camera } from '../data/cameras'
+
+type MonitorWallProps = {
+  cameras: Camera[]
+}
+
+type MonitorStatus = 'loading' | 'ready' | 'error'
+
+type GridLayout = {
+  cols: number
+  rows: number
+}
+
+function getMonitorStatusLabel(status: MonitorStatus) {
+  if (status === 'ready') {
+    return 'Live'
+  }
+
+  if (status === 'error') {
+    return 'Error'
+  }
+
+  return 'Connecting'
+}
+
+function calculateBestLayout(
+  cameraCount: number,
+  containerWidth: number,
+  containerHeight: number,
+  gapPixels: number,
+): GridLayout {
+  if (cameraCount <= 1) {
+    return { cols: 1, rows: 1 }
+  }
+
+  const videoAspect = 16 / 9
+  let bestLayout: GridLayout = { cols: 1, rows: cameraCount }
+  let bestArea = 0
+
+  for (let cols = 1; cols <= cameraCount; cols += 1) {
+    const rows = Math.ceil(cameraCount / cols)
+    const widthWithGaps = containerWidth - (cols - 1) * gapPixels
+    const heightWithGaps = containerHeight - (rows - 1) * gapPixels
+    if (widthWithGaps <= 0 || heightWithGaps <= 0) {
+      continue
+    }
+
+    const slotWidth = widthWithGaps / cols
+    const slotHeight = heightWithGaps / rows
+    const videoHeight = Math.min(slotHeight, slotWidth / videoAspect)
+    const videoWidth = videoHeight * videoAspect
+    const videoArea = videoWidth * videoHeight
+
+    if (videoArea > bestArea) {
+      bestArea = videoArea
+      bestLayout = { cols, rows }
+    }
+  }
+
+  return bestLayout
+}
+
+function MonitorFeedTile({ camera }: { camera: Camera }) {
+  const [status, setStatus] = useState<MonitorStatus>('loading')
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const hlsRef = useRef<Hls | null>(null)
+
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) {
+      return
+    }
+
+    const handleCanPlay = () => {
+      setStatus('ready')
+      void video.play().catch(() => {
+        setStatus('error')
+      })
+    }
+
+    const handleFatalError = () => {
+      setStatus('error')
+    }
+
+    setStatus('loading')
+    video.addEventListener('canplay', handleCanPlay, { once: true })
+    let cancelled = false
+
+    const startPlayback = async () => {
+      if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = camera.streamUrl
+        video.load()
+        return
+      }
+
+      const hlsModule = await import('hls.js')
+      if (cancelled) {
+        return
+      }
+
+      const HlsPlayer = hlsModule.default
+      if (!HlsPlayer.isSupported()) {
+        handleFatalError()
+        return
+      }
+
+      const hls = new HlsPlayer({
+        maxBufferLength: 20,
+        maxMaxBufferLength: 40,
+      })
+
+      hlsRef.current = hls
+      hls.loadSource(camera.streamUrl)
+      hls.attachMedia(video)
+      hls.on(HlsPlayer.Events.ERROR, (_event, data) => {
+        if (data.fatal) {
+          handleFatalError()
+        }
+      })
+    }
+
+    void startPlayback()
+
+    return () => {
+      cancelled = true
+      video.removeEventListener('canplay', handleCanPlay)
+      if (hlsRef.current) {
+        hlsRef.current.destroy()
+        hlsRef.current = null
+      }
+    }
+  }, [camera.streamUrl])
+
+  return (
+    <article className="relative overflow-hidden rounded-lg border border-zinc-700 bg-black">
+      <video
+        ref={videoRef}
+        className="h-full w-full object-cover"
+        muted
+        playsInline
+        autoPlay
+        poster={camera.posterUrl}
+      />
+      <div className="absolute inset-x-0 top-0 bg-gradient-to-b from-black/70 to-transparent px-2 py-2">
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-300">
+              {camera.area}
+            </p>
+            <p className="text-xs font-semibold text-zinc-100">{camera.name}</p>
+          </div>
+          <span className="rounded-full border border-zinc-500 bg-black/40 px-2 py-1 font-mono text-[10px] uppercase tracking-wide text-zinc-200">
+            {getMonitorStatusLabel(status)}
+          </span>
+        </div>
+      </div>
+    </article>
+  )
+}
+
+export function MonitorWall({ cameras }: MonitorWallProps) {
+  const wallRef = useRef<HTMLElement>(null)
+  const gridRef = useRef<HTMLDivElement>(null)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const [layout, setLayout] = useState<GridLayout>({ cols: 1, rows: 1 })
+  const gapPixels = 8
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(document.fullscreenElement === wallRef.current)
+    }
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange)
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange)
+    }
+  }, [])
+
+  useEffect(() => {
+    const gridNode = gridRef.current
+    if (!gridNode) {
+      return
+    }
+
+    const updateLayout = () => {
+      const rect = gridNode.getBoundingClientRect()
+      if (rect.width <= 0 || rect.height <= 0) {
+        return
+      }
+
+      setLayout(calculateBestLayout(cameras.length, rect.width, rect.height, gapPixels))
+    }
+
+    updateLayout()
+    const observer = new ResizeObserver(updateLayout)
+    observer.observe(gridNode)
+    window.addEventListener('resize', updateLayout)
+
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', updateLayout)
+    }
+  }, [cameras.length])
+
+  const handleToggleFullscreen = async () => {
+    try {
+      if (document.fullscreenElement === wallRef.current) {
+        await document.exitFullscreen()
+        return
+      }
+
+      await wallRef.current?.requestFullscreen()
+    } catch {
+      // noop: browser may deny fullscreen if not user-initiated
+    }
+  }
+
+  const tileStyle = useMemo(
+    () => ({
+      gridTemplateColumns: `repeat(${layout.cols}, minmax(0, 1fr))`,
+      gridTemplateRows: `repeat(${layout.rows}, minmax(0, 1fr))`,
+      gap: `${gapPixels}px`,
+    }),
+    [layout.cols, layout.rows],
+  )
+
+  if (cameras.length === 0) {
+    return (
+      <section className="rounded-3xl border border-zinc-300/70 bg-white/85 p-5 shadow-sm backdrop-blur">
+        <h2 className="text-lg font-semibold text-zinc-900">Monitor The Situation</h2>
+        <p className="mt-2 text-sm text-zinc-500">
+          No working cameras for this area filter right now.
+        </p>
+      </section>
+    )
+  }
+
+  return (
+    <section
+      ref={wallRef}
+      className={`overflow-hidden border ${
+        isFullscreen
+          ? 'h-screen border-0 bg-zinc-950 px-3 py-3'
+          : 'h-[74vh] rounded-3xl border-zinc-300/70 bg-zinc-950/95 p-3'
+      }`}
+    >
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <div>
+          <h2 className="text-lg font-semibold text-zinc-100">Monitor The Situation</h2>
+          <p className="mt-1 text-xs text-zinc-400">
+            {cameras.length} working cameras streaming continuously.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={handleToggleFullscreen}
+          className="rounded-full border border-zinc-600 bg-zinc-900 px-4 py-2 text-sm font-medium text-zinc-200 transition hover:border-zinc-400 hover:text-white"
+        >
+          {isFullscreen ? 'Exit fullscreen' : 'Fullscreen wall'}
+        </button>
+      </div>
+
+      <div ref={gridRef} className="grid min-h-0 h-[calc(100%-56px)]" style={tileStyle}>
+        {cameras.map((camera) => (
+          <MonitorFeedTile key={camera.id} camera={camera} />
+        ))}
+      </div>
+    </section>
+  )
+}

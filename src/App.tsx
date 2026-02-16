@@ -1,13 +1,14 @@
 import { useCallback, useMemo, useReducer, useState } from 'react'
 import { CameraLightbox } from './components/CameraLightbox'
 import { CameraMap } from './components/CameraMap'
+import { MonitorWall } from './components/MonitorWall'
 import { CameraTile } from './components/CameraTile'
 import { cameras } from './data/cameras'
 import type { Camera } from './data/cameras'
 import type { StreamRuntimeStatus } from './types/stream'
 
 type AreaFilter = 'all' | 'truckee' | 'south-lake'
-type ViewMode = 'streams' | 'map'
+type ViewMode = 'streams' | 'map' | 'monitor'
 
 type StreamControllerState = {
   activeById: Record<string, boolean>
@@ -133,15 +134,16 @@ function App() {
     setLightboxCamera(null)
   }, [])
 
+  const areaFilteredCameras = useMemo(() => {
+    return cameras.filter((camera) => {
+      return areaFilter === 'all' ? true : camera.region === areaFilter
+    })
+  }, [areaFilter])
+
   const filteredCameras = useMemo(() => {
     const query = searchText.trim().toLowerCase()
 
-    return cameras.filter((camera) => {
-      const areaMatches = areaFilter === 'all' ? true : camera.region === areaFilter
-      if (!areaMatches) {
-        return false
-      }
-
+    return areaFilteredCameras.filter((camera) => {
       if (!query) {
         return true
       }
@@ -149,7 +151,19 @@ function App() {
       const haystack = `${camera.name} ${camera.area}`.toLowerCase()
       return haystack.includes(query)
     })
-  }, [areaFilter, searchText])
+  }, [areaFilteredCameras, searchText])
+
+  const monitorCameras = useMemo(() => {
+    return [...areaFilteredCameras]
+      .filter((camera) => camera.health === 'live')
+      .sort((left, right) => {
+        const areaCompare = left.area.localeCompare(right.area)
+        if (areaCompare !== 0) {
+          return areaCompare
+        }
+        return left.name.localeCompare(right.name)
+      })
+  }, [areaFilteredCameras])
 
   const sortedCameras = useMemo(() => {
     return [...filteredCameras].sort((left, right) => {
@@ -245,6 +259,17 @@ function App() {
             >
               Map
             </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('monitor')}
+              className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                viewMode === 'monitor'
+                  ? 'bg-zinc-900 text-white'
+                  : 'border border-zinc-300 bg-white text-zinc-700 hover:border-zinc-500 hover:text-zinc-900'
+              }`}
+            >
+              Monitor
+            </button>
           </div>
 
           <div className="mb-4 flex flex-wrap gap-2">
@@ -264,20 +289,28 @@ function App() {
             ))}
           </div>
 
-          <label
-            htmlFor="camera-search"
-            className="mb-2 block font-mono text-xs uppercase tracking-[0.2em] text-zinc-500"
-          >
-            Find camera
-          </label>
-          <input
-            id="camera-search"
-            type="search"
-            value={searchText}
-            onChange={(event) => setSearchText(event.target.value)}
-            placeholder="Search by location or camera name"
-            className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-zinc-900 shadow-inner outline-none transition placeholder:text-zinc-400 focus:border-zinc-900"
-          />
+          {viewMode !== 'monitor' ? (
+            <>
+              <label
+                htmlFor="camera-search"
+                className="mb-2 block font-mono text-xs uppercase tracking-[0.2em] text-zinc-500"
+              >
+                Find camera
+              </label>
+              <input
+                id="camera-search"
+                type="search"
+                value={searchText}
+                onChange={(event) => setSearchText(event.target.value)}
+                placeholder="Search by location or camera name"
+                className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-zinc-900 shadow-inner outline-none transition placeholder:text-zinc-400 focus:border-zinc-900"
+              />
+            </>
+          ) : (
+            <p className="text-sm text-zinc-500">
+              Monitor mode always streams all currently working cameras in the selected area.
+            </p>
+          )}
 
           <div className="mt-4 flex flex-wrap gap-2">
             {viewMode === 'streams' ? (
@@ -297,8 +330,12 @@ function App() {
                   {sortByStatus ? 'Sorting by status' : 'Sorting A-Z'}
                 </button>
               </>
-            ) : (
+            ) : viewMode === 'map' ? (
               <p className="text-xs text-zinc-500">Click a map marker to open its live stream.</p>
+            ) : (
+              <p className="text-xs text-zinc-500">
+                Use Fullscreen Wall in monitor mode for a true all-cameras-at-once view.
+              </p>
             )}
           </div>
         </section>
@@ -309,6 +346,8 @@ function App() {
             runtimeStatusById={streamControllerState.runtimeById}
             onCameraSelect={handleOpenCameraLightbox}
           />
+        ) : viewMode === 'monitor' ? (
+          <MonitorWall cameras={monitorCameras} />
         ) : (
           <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {sortedCameras.map((camera) => (
