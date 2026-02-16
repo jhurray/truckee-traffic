@@ -30,7 +30,7 @@ export const cameras: Camera[] = [
       'https://live6.brownrice.com:444/communityink2/communityink2.stream/main_playlist.m3u8',
     posterUrl: 'https://live6.brownrice.com/cam-images/communityink2.jpg',
     health: 'live',
-    coordinates: { lat: 39.347, lng: -120.181, estimated: true },
+    coordinates: { lat: 39.3263, lng: -120.2189, estimated: false },
   },
   {
     id: 'communityinkdonnerpass',
@@ -42,7 +42,7 @@ export const cameras: Camera[] = [
       'https://live6.brownrice.com:444/communityinkdonnerpass/communityinkdonnerpass.stream/main_playlist.m3u8',
     posterUrl: 'https://live6.brownrice.com/cam-images/communityinkdonnerpass.jpg',
     health: 'live',
-    coordinates: { lat: 39.327, lng: -120.232, estimated: true },
+    coordinates: { lat: 39.3249, lng: -120.2143, estimated: false },
   },
   {
     id: 'i80westtruckee',
@@ -66,7 +66,7 @@ export const cameras: Camera[] = [
       'https://live6.brownrice.com:444/communityinkcalinorthwood/communityinkcalinorthwood.stream/main_playlist.m3u8',
     posterUrl: 'https://live6.brownrice.com/cam-images/communityinkcalinorthwood.jpg',
     health: 'live',
-    coordinates: { lat: 39.3491, lng: -120.1795, estimated: true },
+    coordinates: { lat: 39.3436395, lng: -120.214921, estimated: false },
   },
   {
     id: 'communityinkhwy89',
@@ -78,7 +78,7 @@ export const cameras: Camera[] = [
       'https://live6.brownrice.com:444/communityinkhwy89/communityinkhwy89.stream/main_playlist.m3u8',
     posterUrl: 'https://live6.brownrice.com/cam-images/communityinkhwy89.jpg',
     health: 'live',
-    coordinates: { lat: 39.3303, lng: -120.1848, estimated: true },
+    coordinates: { lat: 39.3261644, lng: -120.2079373, estimated: false },
   },
   {
     id: 'communityinkdntwntruckee',
@@ -174,6 +174,6 @@ export const cameras: Camera[] = [
       'https://live5.brownrice.com:444/communityinkvillager1/communityinkvillager1.stream/main_playlist.m3u8',
     posterUrl: 'https://live5.brownrice.com/cam-images/communityinkvillager1.jpg',
     health: 'live',
-    coordinates: { lat: 39.3184, lng: -120.2137, estimated: true },
+    coordinates: { lat: 39.3265691, lng: -120.1954651, estimated: false },
   },
 ]

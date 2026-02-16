@@ -201,14 +201,6 @@ export function CameraTile({
           </button>
         </div>
 
-        <a
-          href={camera.sourcePage}
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex text-xs font-medium text-zinc-500 underline decoration-zinc-300 underline-offset-4 hover:text-zinc-900"
-        >
-          Original source page
-        </a>
       </div>
     </article>
   )

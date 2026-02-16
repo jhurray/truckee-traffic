@@ -172,14 +172,6 @@ export function CameraLightbox({ camera, onClose }: CameraLightboxProps) {
             >
               {isMuted ? 'Unmute' : 'Mute'}
             </button>
-            <a
-              href={camera.sourcePage}
-              target="_blank"
-              rel="noreferrer"
-              className="rounded-full border border-zinc-700 bg-zinc-900 px-4 py-2 text-sm font-medium text-zinc-200 transition hover:border-zinc-500 hover:text-white"
-            >
-              Source page
-            </a>
           </div>
           <p className="text-xs text-zinc-500">Click outside the player or press Esc to close.</p>
         </footer>
