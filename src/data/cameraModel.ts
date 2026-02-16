@@ -1,3 +1,5 @@
+import type { CameraTag } from './cameraTags'
+
 export type CameraHealth = 'live' | 'offline' | 'unverified'
 export type CameraRegion = 'truckee' | 'south-lake' | 'other'
 export type CameraCategory = 'traffic' | 'resort' | 'scenic' | 'community'
@@ -43,6 +45,7 @@ export type Camera = {
   region: CameraRegion
   category: CameraCategory
   priority: CameraPriority
+  tags: CameraTag[]
   health: CameraHealth
   coordinates: CameraCoordinates
   feed: CameraFeed

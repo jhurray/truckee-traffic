@@ -21,6 +21,7 @@ export const cameras: Camera[] = [
     region: 'truckee',
     category: 'community',
     priority: 'high',
+    tags: ['northwoods', 'donner_pass_road', 'intersection', 'ski_traffic'],
     health: 'live',
     coordinates: { lat: 39.3263, lng: -120.2189, estimated: false },
     feed: {
@@ -42,6 +43,7 @@ export const cameras: Camera[] = [
     region: 'truckee',
     category: 'community',
     priority: 'high',
+    tags: ['donner_pass_road', 'intersection'],
     health: 'live',
     coordinates: { lat: 39.3249, lng: -120.2143, estimated: false },
     feed: {
@@ -63,6 +65,7 @@ export const cameras: Camera[] = [
     region: 'truckee',
     category: 'community',
     priority: 'high',
+    tags: ['northwoods', 'intersection'],
     health: 'live',
     coordinates: { lat: 39.3436395, lng: -120.214921, estimated: false },
     feed: {
@@ -84,6 +87,7 @@ export const cameras: Camera[] = [
     region: 'truckee',
     category: 'community',
     priority: 'high',
+    tags: ['donner_pass_road'],
     health: 'live',
     coordinates: { lat: 39.3261644, lng: -120.2079373, estimated: false },
     feed: {
@@ -105,6 +109,7 @@ export const cameras: Camera[] = [
     region: 'other',
     category: 'traffic',
     priority: 'critical',
+    tags: ['i80', 'highway', 'kingvale', 'chain_control'],
     health: 'offline',
     coordinates: { lat: 39.3106, lng: -120.4243, estimated: false },
     feed: {
@@ -127,6 +132,7 @@ export const cameras: Camera[] = [
     region: 'other',
     category: 'traffic',
     priority: 'critical',
+    tags: ['i80', 'highway', 'kingvale', 'chain_control'],
     health: 'live',
     coordinates: { lat: 39.3106, lng: -120.4243, estimated: false },
     feed: {
@@ -148,6 +154,7 @@ export const cameras: Camera[] = [
     region: 'other',
     category: 'traffic',
     priority: 'high',
+    tags: ['i80', 'highway', 'soda_springs', 'summit'],
     health: 'live',
     coordinates: { lat: 39.3205, lng: -120.3855, estimated: false },
     feed: {
@@ -169,6 +176,7 @@ export const cameras: Camera[] = [
     region: 'other',
     category: 'traffic',
     priority: 'high',
+    tags: ['i80', 'highway', 'soda_springs', 'summit'],
     health: 'unverified',
     coordinates: { lat: 39.3205, lng: -120.3855, estimated: false },
     feed: {
@@ -191,6 +199,7 @@ export const cameras: Camera[] = [
     region: 'other',
     category: 'traffic',
     priority: 'high',
+    tags: ['i80', 'highway', 'castle_peak', 'summit'],
     health: 'live',
     coordinates: { lat: 39.333, lng: -120.3582, estimated: false },
     feed: {
@@ -212,6 +221,7 @@ export const cameras: Camera[] = [
     region: 'other',
     category: 'traffic',
     priority: 'critical',
+    tags: ['i80', 'highway', 'summit'],
     health: 'unverified',
     coordinates: { lat: 39.3365, lng: -120.3357, estimated: false },
     feed: {
@@ -235,6 +245,7 @@ export const cameras: Camera[] = [
     region: 'truckee',
     category: 'traffic',
     priority: 'critical',
+    tags: ['i80', 'highway', 'donner_lake', 'intersection'],
     health: 'live',
     coordinates: { lat: 39.3248, lng: -120.2185, estimated: false },
     feed: {
@@ -257,6 +268,7 @@ export const cameras: Camera[] = [
     region: 'truckee',
     category: 'traffic',
     priority: 'critical',
+    tags: ['i80', 'highway', 'chain_control'],
     health: 'live',
     coordinates: { lat: 39.3402, lng: -120.1558, estimated: false },
     feed: {
@@ -279,6 +291,7 @@ export const cameras: Camera[] = [
     region: 'truckee',
     category: 'traffic',
     priority: 'high',
+    tags: ['hwy89', 'highway', 'intersection', 'ski_traffic'],
     health: 'live',
     coordinates: { lat: 39.3275, lng: -120.1865, estimated: false },
     feed: {
@@ -300,6 +313,7 @@ export const cameras: Camera[] = [
     region: 'other',
     category: 'traffic',
     priority: 'critical',
+    tags: ['hwy89', 'highway', 'intersection', 'palisades', 'olympic_valley', 'ski_traffic'],
     health: 'live',
     coordinates: { lat: 39.1969, lng: -120.2367, estimated: false },
     feed: {
@@ -322,6 +336,7 @@ export const cameras: Camera[] = [
     region: 'other',
     category: 'traffic',
     priority: 'high',
+    tags: ['hwy89', 'highway', 'intersection', 'tahoe_city'],
     health: 'unverified',
     coordinates: { lat: 39.1706, lng: -120.1442, estimated: false },
     feed: {
@@ -344,6 +359,7 @@ export const cameras: Camera[] = [
     region: 'truckee',
     category: 'traffic',
     priority: 'critical',
+    tags: ['hwy267', 'highway', 'intersection', 'northstar', 'ski_traffic'],
     health: 'live',
     coordinates: { lat: 39.2934, lng: -120.1147, estimated: false },
     feed: {
@@ -365,6 +381,7 @@ export const cameras: Camera[] = [
     region: 'other',
     category: 'traffic',
     priority: 'high',
+    tags: ['hwy267', 'highway', 'brockway', 'summit'],
     health: 'live',
     coordinates: { lat: 39.2635, lng: -120.0762, estimated: false },
     feed: {
@@ -387,6 +404,7 @@ export const cameras: Camera[] = [
     region: 'other',
     category: 'resort',
     priority: 'high',
+    tags: ['palisades', 'olympic_valley', 'base_area', 'village'],
     health: 'live',
     coordinates: { lat: 39.197, lng: -120.2355, estimated: false },
     feed: {
@@ -406,6 +424,7 @@ export const cameras: Camera[] = [
     region: 'other',
     category: 'resort',
     priority: 'high',
+    tags: ['palisades', 'olympic_valley', 'summit'],
     health: 'live',
     coordinates: { lat: 39.1895, lng: -120.245, estimated: false },
     feed: {
@@ -426,6 +445,7 @@ export const cameras: Camera[] = [
     region: 'other',
     category: 'resort',
     priority: 'high',
+    tags: ['palisades', 'olympic_valley', 'summit'],
     health: 'live',
     coordinates: { lat: 39.1845, lng: -120.252, estimated: false },
     feed: {
@@ -445,6 +465,7 @@ export const cameras: Camera[] = [
     region: 'other',
     category: 'resort',
     priority: 'normal',
+    tags: ['sugar_bowl', 'summit', 'base_area'],
     health: 'unverified',
     coordinates: { lat: 39.3082, lng: -120.3475, estimated: false },
     feed: {
@@ -465,6 +486,7 @@ export const cameras: Camera[] = [
     region: 'other',
     category: 'resort',
     priority: 'normal',
+    tags: ['sugar_bowl', 'summit'],
     health: 'unverified',
     coordinates: { lat: 39.3035, lng: -120.342, estimated: false },
     feed: {
@@ -485,6 +507,7 @@ export const cameras: Camera[] = [
     region: 'other',
     category: 'resort',
     priority: 'high',
+    tags: ['northstar', 'summit'],
     health: 'live',
     coordinates: { lat: 39.2565, lng: -120.134, estimated: false },
     feed: {
@@ -507,6 +530,7 @@ export const cameras: Camera[] = [
     region: 'other',
     category: 'resort',
     priority: 'normal',
+    tags: ['northstar', 'village'],
     health: 'live',
     coordinates: { lat: 39.275, lng: -120.1215, estimated: false },
     feed: {
@@ -531,6 +555,7 @@ export const cameras: Camera[] = [
     region: 'truckee',
     category: 'resort',
     priority: 'normal',
+    tags: ['tahoe_donner', 'base_area'],
     health: 'live',
     coordinates: { lat: 39.344, lng: -120.263, estimated: false },
     feed: {
@@ -551,6 +576,7 @@ export const cameras: Camera[] = [
     region: 'truckee',
     category: 'resort',
     priority: 'normal',
+    tags: ['tahoe_donner'],
     health: 'live',
     coordinates: { lat: 39.3585, lng: -120.2315, estimated: false },
     feed: {
@@ -571,6 +597,7 @@ export const cameras: Camera[] = [
     region: 'truckee',
     category: 'scenic',
     priority: 'high',
+    tags: ['airport', 'local_utility'],
     health: 'live',
     coordinates: { lat: 39.32, lng: -120.1395, estimated: false },
     feed: {
@@ -592,6 +619,7 @@ export const cameras: Camera[] = [
     region: 'truckee',
     category: 'scenic',
     priority: 'high',
+    tags: ['donner_lake', 'village'],
     health: 'live',
     coordinates: { lat: 39.3245, lng: -120.2655, estimated: false },
     feed: {
@@ -613,6 +641,7 @@ export const cameras: Camera[] = [
     region: 'truckee',
     category: 'scenic',
     priority: 'high',
+    tags: ['downtown', 'local_utility'],
     health: 'live',
     coordinates: { lat: 39.3275, lng: -120.187, estimated: false },
     feed: {

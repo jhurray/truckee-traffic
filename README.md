@@ -8,6 +8,7 @@ Multi-camera dashboard for Tahoe/Truckee traffic, resort, and local weather/scen
 - Monitor wall that streams all working cameras with fullscreen support.
 - Multi-provider feed support: `hls`, `iframe`, and `snapshot`.
 - Area filters (`All`, `Truckee`, `South Lake`) and status-priority sorting.
+- Multi-tag filtering with AND/OR matching across Streams, Map, and Monitor.
 
 ## Stack
 - Vite + React + TypeScript
@@ -38,6 +39,7 @@ Catalog helper/selectors are in `src/data/cameraCatalog.ts`.
 
 - `feed` describes how each camera is rendered. `hls` uses `playlistUrl` and `posterUrl`. `iframe` uses `embedUrl` with optional `posterUrl`. `snapshot` uses `imageUrl` and `refreshSeconds`.
 - `source` tracks the origin of the feed: `provider`, `pageUrl`, `extractor`, optional `notes`
+- `tags` stores location/corridor/resort semantics used for advanced filtering
 - `health`: last known check state
 - `coordinates`: map location and whether it is estimated
 - `category` and `priority`: classification for sorting/grouping

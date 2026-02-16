@@ -17,8 +17,9 @@ Truckee Traffic Cams is a Vite + React dashboard that streams public traffic, re
 - `src/components/MonitorWall.tsx` (multi-stream wall + fullscreen)
 - `src/components/CameraLightbox.tsx` (focused stream player)
 - `src/data/cameraModel.ts` (canonical camera and feed type definitions)
+- `src/data/cameraTags.ts` (tag taxonomy and grouping metadata)
 - `src/data/cameras.ts` (camera catalog data)
-- `src/data/cameraCatalog.ts` (selectors and sorting/filter helpers)
+- `src/data/cameraCatalog.ts` (selectors and sorting/filter helpers, derived tag logic)
 - `src/index.css` (global fonts + Tailwind entry + Leaflet font overrides)
 
 ## Data maintenance
@@ -30,6 +31,7 @@ Truckee Traffic Cams is a Vite + React dashboard that streams public traffic, re
 - If coordinates change, update `coordinates` and `estimated` accordingly; the map uses these values directly.
 - `feed` defines how to render video. `hls` uses `playlistUrl` and `posterUrl`. `iframe` uses `embedUrl` with optional `posterUrl`. `snapshot` uses `imageUrl` and `refreshSeconds`.
 - `source` tracks where the feed comes from: `provider`, `pageUrl`, `extractor`, optional `notes`.
+- `tags` stores camera-specific semantic tags; the app also derives tags from `category`, `priority`, `feed.kind`, `region`, and `source.provider`.
 - `category` and `priority` drive grouping and future sorting rules.
 
 ## Streaming behavior

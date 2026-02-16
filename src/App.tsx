@@ -6,12 +6,18 @@ import { CameraTile } from './components/CameraTile'
 import {
   areaFilterLabelMap,
   cameras,
+  getCameraSearchHaystack,
   getCameraStatusSortRank,
+  getCameraTagGroups,
+  getCameraTagLabel,
   isWorkingCamera,
   matchesAreaFilter,
+  matchesTagFilter,
   type AreaFilter,
+  type TagFilterMode,
 } from './data/cameraCatalog'
 import type { Camera } from './data/cameraModel'
+import type { CameraTag } from './data/cameraTags'
 import type { StreamRuntimeStatus } from './types/stream'
 
 type ViewMode = 'streams' | 'map' | 'monitor'
@@ -23,7 +29,7 @@ type StreamControllerState = {
 
 type StreamControllerAction =
   | { type: 'toggle_one'; cameraId: string }
-  | { type: 'set_all'; value: boolean }
+  | { type: 'set_many'; cameraIds: string[]; value: boolean }
   | { type: 'runtime_update'; cameraId: string; status: StreamRuntimeStatus }
 
 function createInitialStreamControllerState(): StreamControllerState {
@@ -57,14 +63,14 @@ function streamControllerReducer(
     }
   }
 
-  if (action.type === 'set_all') {
-    const nextActiveById = Object.fromEntries(
-      cameras.map((camera) => [camera.id, action.value]),
-    ) as Record<string, boolean>
+  if (action.type === 'set_many') {
+    const nextActiveById: Record<string, boolean> = { ...state.activeById }
+    const nextRuntimeById: Record<string, StreamRuntimeStatus> = { ...state.runtimeById }
 
-    const nextRuntimeById: Record<string, StreamRuntimeStatus> = Object.fromEntries(
-      cameras.map((camera) => [camera.id, action.value ? 'loading' : 'idle']),
-    ) as Record<string, StreamRuntimeStatus>
+    for (const cameraId of action.cameraIds) {
+      nextActiveById[cameraId] = action.value
+      nextRuntimeById[cameraId] = action.value ? 'loading' : 'idle'
+    }
 
     return {
       activeById: nextActiveById,
@@ -89,6 +95,8 @@ function App() {
   const [viewMode, setViewMode] = useState<ViewMode>('streams')
   const [searchText, setSearchText] = useState('')
   const [areaFilter, setAreaFilter] = useState<AreaFilter>('all')
+  const [selectedTags, setSelectedTags] = useState<CameraTag[]>([])
+  const [tagFilterMode, setTagFilterMode] = useState<TagFilterMode>('all')
   const [sortByStatus, setSortByStatus] = useState(true)
   const [lightboxCamera, setLightboxCamera] = useState<Camera | null>(null)
   const [streamControllerState, dispatchStreamController] = useReducer(
@@ -116,25 +124,50 @@ function App() {
     setLightboxCamera(null)
   }, [])
 
+  const handleToggleTag = useCallback((tag: CameraTag) => {
+    setSelectedTags((current) => {
+      if (current.includes(tag)) {
+        return current.filter((activeTag) => activeTag !== tag)
+      }
+      return [...current, tag]
+    })
+  }, [])
+
+  const handleClearTags = useCallback(() => {
+    setSelectedTags([])
+  }, [])
+
+  const selectedTagSet = useMemo(() => new Set(selectedTags), [selectedTags])
+
   const areaFilteredCameras = useMemo(() => {
     return cameras.filter((camera) => matchesAreaFilter(camera, areaFilter))
   }, [areaFilter])
 
+  const tagGroupOptions = useMemo(() => {
+    return getCameraTagGroups(areaFilteredCameras)
+  }, [areaFilteredCameras])
+
+  const tagFilteredCameras = useMemo(() => {
+    return areaFilteredCameras.filter((camera) =>
+      matchesTagFilter(camera, selectedTags, tagFilterMode),
+    )
+  }, [areaFilteredCameras, selectedTags, tagFilterMode])
+
   const filteredCameras = useMemo(() => {
     const query = searchText.trim().toLowerCase()
 
-    return areaFilteredCameras.filter((camera) => {
+    return tagFilteredCameras.filter((camera) => {
       if (!query) {
         return true
       }
 
-      const haystack = `${camera.name} ${camera.area}`.toLowerCase()
+      const haystack = getCameraSearchHaystack(camera)
       return haystack.includes(query)
     })
-  }, [areaFilteredCameras, searchText])
+  }, [searchText, tagFilteredCameras])
 
   const monitorCameras = useMemo(() => {
-    return [...areaFilteredCameras]
+    return [...tagFilteredCameras]
       .filter((camera) => isWorkingCamera(camera))
       .sort((left, right) => {
         const areaCompare = left.area.localeCompare(right.area)
@@ -143,7 +176,7 @@ function App() {
         }
         return left.name.localeCompare(right.name)
       })
-  }, [areaFilteredCameras])
+  }, [tagFilteredCameras])
 
   const sortedCameras = useMemo(() => {
     return [...filteredCameras].sort((left, right) => {
@@ -178,10 +211,24 @@ function App() {
     return Object.values(streamControllerState.activeById).filter(Boolean).length
   }, [streamControllerState.activeById])
 
-  const allStreamsActive = activeStreamCount === cameras.length
+  const bulkControlledCameraIds = useMemo(() => sortedCameras.map((camera) => camera.id), [sortedCameras])
+
+  const allFilteredStreamsActive = useMemo(() => {
+    if (bulkControlledCameraIds.length === 0) {
+      return false
+    }
+
+    return bulkControlledCameraIds.every((cameraId) =>
+      Boolean(streamControllerState.activeById[cameraId]),
+    )
+  }, [bulkControlledCameraIds, streamControllerState.activeById])
 
   const handleToggleAllStreams = () => {
-    dispatchStreamController({ type: 'set_all', value: !allStreamsActive })
+    dispatchStreamController({
+      type: 'set_many',
+      cameraIds: bulkControlledCameraIds,
+      value: !allFilteredStreamsActive,
+    })
   }
 
   return (
@@ -270,6 +317,97 @@ function App() {
             ))}
           </div>
 
+          <div className="mb-4 rounded-2xl border border-zinc-200 bg-white/80 p-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-zinc-500">
+                Tag filters
+              </p>
+              <span className="rounded-full bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-600">
+                {selectedTags.length} selected
+              </span>
+              {selectedTags.length > 0 ? (
+                <button
+                  type="button"
+                  onClick={handleClearTags}
+                  className="rounded-full border border-zinc-300 px-3 py-1 text-xs font-medium text-zinc-600 transition hover:border-zinc-500 hover:text-zinc-900"
+                >
+                  Clear tags
+                </button>
+              ) : null}
+            </div>
+
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setTagFilterMode('all')}
+                className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
+                  tagFilterMode === 'all'
+                    ? 'bg-zinc-900 text-white'
+                    : 'border border-zinc-300 bg-white text-zinc-700 hover:border-zinc-500 hover:text-zinc-900'
+                }`}
+              >
+                Match all selected tags
+              </button>
+              <button
+                type="button"
+                onClick={() => setTagFilterMode('any')}
+                className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
+                  tagFilterMode === 'any'
+                    ? 'bg-zinc-900 text-white'
+                    : 'border border-zinc-300 bg-white text-zinc-700 hover:border-zinc-500 hover:text-zinc-900'
+                }`}
+              >
+                Match any selected tag
+              </button>
+            </div>
+
+            {selectedTags.length > 0 ? (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {selectedTags.map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => handleToggleTag(tag)}
+                    className="rounded-full border border-zinc-900 bg-zinc-900 px-3 py-1 text-xs font-medium text-white transition hover:bg-zinc-700"
+                  >
+                    {getCameraTagLabel(tag)} ×
+                  </button>
+                ))}
+              </div>
+            ) : null}
+
+            <div className="mt-4 space-y-3">
+              {tagGroupOptions.map((group) => (
+                <div key={group.group}>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                    {group.label}
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {group.tags
+                      .filter((tagOption) => tagOption.count > 0)
+                      .map((tagOption) => {
+                        const isSelected = selectedTagSet.has(tagOption.tag)
+                        return (
+                          <button
+                            key={tagOption.tag}
+                            type="button"
+                            onClick={() => handleToggleTag(tagOption.tag)}
+                            className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
+                              isSelected
+                                ? 'border-zinc-900 bg-zinc-900 text-white'
+                                : 'border-zinc-300 bg-white text-zinc-700 hover:border-zinc-500 hover:text-zinc-900'
+                            }`}
+                          >
+                            {tagOption.label} ({tagOption.count})
+                          </button>
+                        )
+                      })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {viewMode !== 'monitor' ? (
             <>
               <label
@@ -289,7 +427,7 @@ function App() {
             </>
           ) : (
             <p className="text-sm text-zinc-500">
-              Monitor mode always streams all currently working cameras in the selected area.
+              Monitor mode streams all currently working cameras that match selected area and tags.
             </p>
           )}
 
@@ -299,9 +437,10 @@ function App() {
                 <button
                   type="button"
                   onClick={handleToggleAllStreams}
-                  className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-700"
+                  disabled={bulkControlledCameraIds.length === 0}
+                  className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-45"
                 >
-                  {allStreamsActive ? 'Stop all streams' : 'Start all streams'}
+                  {allFilteredStreamsActive ? 'Stop filtered streams' : 'Start filtered streams'}
                 </button>
                 <button
                   type="button"
