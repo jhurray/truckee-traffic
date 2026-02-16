@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useReducer, useState } from 'react'
+import { CameraLightbox } from './components/CameraLightbox'
 import { CameraMap } from './components/CameraMap'
 import { CameraTile } from './components/CameraTile'
 import { cameras } from './data/cameras'
@@ -6,6 +7,7 @@ import type { Camera } from './data/cameras'
 import type { StreamRuntimeStatus } from './types/stream'
 
 type AreaFilter = 'all' | 'truckee' | 'south-lake'
+type ViewMode = 'streams' | 'map'
 
 type StreamControllerState = {
   activeById: Record<string, boolean>
@@ -101,9 +103,11 @@ function getStatusSortRank(camera: Camera, runtimeStatusById: Record<string, Str
 }
 
 function App() {
+  const [viewMode, setViewMode] = useState<ViewMode>('streams')
   const [searchText, setSearchText] = useState('')
   const [areaFilter, setAreaFilter] = useState<AreaFilter>('all')
   const [sortByStatus, setSortByStatus] = useState(true)
+  const [lightboxCamera, setLightboxCamera] = useState<Camera | null>(null)
   const [streamControllerState, dispatchStreamController] = useReducer(
     streamControllerReducer,
     undefined,
@@ -120,6 +124,14 @@ function App() {
     },
     [],
   )
+
+  const handleOpenCameraLightbox = useCallback((camera: Camera) => {
+    setLightboxCamera(camera)
+  }, [])
+
+  const handleCloseCameraLightbox = useCallback(() => {
+    setLightboxCamera(null)
+  }, [])
 
   const filteredCameras = useMemo(() => {
     const query = searchText.trim().toLowerCase()
@@ -211,6 +223,31 @@ function App() {
 
         <section className="rounded-3xl border border-zinc-300/70 bg-white/85 p-4 shadow-sm backdrop-blur sm:p-5">
           <div className="mb-4 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setViewMode('streams')}
+              className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                viewMode === 'streams'
+                  ? 'bg-zinc-900 text-white'
+                  : 'border border-zinc-300 bg-white text-zinc-700 hover:border-zinc-500 hover:text-zinc-900'
+              }`}
+            >
+              Streams
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('map')}
+              className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                viewMode === 'map'
+                  ? 'bg-zinc-900 text-white'
+                  : 'border border-zinc-300 bg-white text-zinc-700 hover:border-zinc-500 hover:text-zinc-900'
+              }`}
+            >
+              Map
+            </button>
+          </div>
+
+          <div className="mb-4 flex flex-wrap gap-2">
             {(Object.keys(areaFilterLabelMap) as AreaFilter[]).map((filterOption) => (
               <button
                 key={filterOption}
@@ -243,40 +280,49 @@ function App() {
           />
 
           <div className="mt-4 flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={handleToggleAllStreams}
-              className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-700"
-            >
-              {allStreamsActive ? 'Stop all streams' : 'Start all streams'}
-            </button>
-            <button
-              type="button"
-              onClick={() => setSortByStatus((current) => !current)}
-              className="rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:border-zinc-500 hover:text-zinc-900"
-            >
-              {sortByStatus ? 'Sorting by status' : 'Sorting A-Z'}
-            </button>
+            {viewMode === 'streams' ? (
+              <>
+                <button
+                  type="button"
+                  onClick={handleToggleAllStreams}
+                  className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-700"
+                >
+                  {allStreamsActive ? 'Stop all streams' : 'Start all streams'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSortByStatus((current) => !current)}
+                  className="rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:border-zinc-500 hover:text-zinc-900"
+                >
+                  {sortByStatus ? 'Sorting by status' : 'Sorting A-Z'}
+                </button>
+              </>
+            ) : (
+              <p className="text-xs text-zinc-500">Click a map marker to open its live stream.</p>
+            )}
           </div>
         </section>
 
-        <CameraMap
-          cameras={sortedCameras}
-          runtimeStatusById={streamControllerState.runtimeById}
-        />
-
-        <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {sortedCameras.map((camera) => (
-            <CameraTile
-              key={camera.id}
-              camera={camera}
-              isStreaming={Boolean(streamControllerState.activeById[camera.id])}
-              runtimeStatus={streamControllerState.runtimeById[camera.id]}
-              onToggleStreaming={handleToggleOne}
-              onRuntimeStatusChange={handleRuntimeStatusChange}
-            />
-          ))}
-        </section>
+        {viewMode === 'map' ? (
+          <CameraMap
+            cameras={sortedCameras}
+            runtimeStatusById={streamControllerState.runtimeById}
+            onCameraSelect={handleOpenCameraLightbox}
+          />
+        ) : (
+          <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {sortedCameras.map((camera) => (
+              <CameraTile
+                key={camera.id}
+                camera={camera}
+                isStreaming={Boolean(streamControllerState.activeById[camera.id])}
+                runtimeStatus={streamControllerState.runtimeById[camera.id]}
+                onToggleStreaming={handleToggleOne}
+                onRuntimeStatusChange={handleRuntimeStatusChange}
+              />
+            ))}
+          </section>
+        )}
 
         <footer className="pb-4 text-xs text-zinc-500">
           Last stream verification was run on February 16, 2026. A failing stream can come back
@@ -284,6 +330,14 @@ function App() {
           edited in <code>src/data/cameras.ts</code>.
         </footer>
       </div>
+
+      {lightboxCamera ? (
+        <CameraLightbox
+          key={lightboxCamera.id}
+          camera={lightboxCamera}
+          onClose={handleCloseCameraLightbox}
+        />
+      ) : null}
     </main>
   )
 }

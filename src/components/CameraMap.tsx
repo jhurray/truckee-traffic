@@ -1,10 +1,11 @@
-import { CircleMarker, MapContainer, Popup, TileLayer } from 'react-leaflet'
+import { CircleMarker, MapContainer, TileLayer, Tooltip } from 'react-leaflet'
 import type { Camera } from '../data/cameras'
 import type { StreamRuntimeStatus } from '../types/stream'
 
 type CameraMapProps = {
   cameras: Camera[]
   runtimeStatusById: Record<string, StreamRuntimeStatus>
+  onCameraSelect: (camera: Camera) => void
 }
 
 function getMarkerColor(camera: Camera, runtimeStatus: StreamRuntimeStatus | undefined) {
@@ -36,7 +37,7 @@ function getMapCenter(cameras: Camera[]) {
   return [latTotal / cameras.length, lngTotal / cameras.length] as [number, number]
 }
 
-export function CameraMap({ cameras, runtimeStatusById }: CameraMapProps) {
+export function CameraMap({ cameras, runtimeStatusById, onCameraSelect }: CameraMapProps) {
   const visibleCameras = cameras.filter((camera) => Number.isFinite(camera.coordinates.lat))
 
   if (visibleCameras.length === 0) {
@@ -84,17 +85,16 @@ export function CameraMap({ cameras, runtimeStatusById }: CameraMapProps) {
                 fillOpacity: 0.75,
                 weight: 2,
               }}
+              eventHandlers={{
+                click: () => onCameraSelect(camera),
+              }}
             >
-              <Popup>
+              <Tooltip direction="top" opacity={0.95} offset={[0, -6]}>
                 <div className="space-y-1">
                   <p className="text-sm font-semibold">{camera.name}</p>
                   <p className="text-xs text-zinc-600">{camera.area}</p>
-                  <p className="text-xs text-zinc-600">
-                    Lat/Lng: {camera.coordinates.lat.toFixed(4)},{' '}
-                    {camera.coordinates.lng.toFixed(4)}
-                  </p>
                 </div>
-              </Popup>
+              </Tooltip>
             </CircleMarker>
           )
         })}
