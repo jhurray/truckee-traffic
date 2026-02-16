@@ -4,6 +4,7 @@ import type { Camera } from '../data/cameras'
 
 type MonitorWallProps = {
   cameras: Camera[]
+  immersive?: boolean
 }
 
 type MonitorStatus = 'loading' | 'ready' | 'error'
@@ -226,7 +227,7 @@ function MonitorFeedTile({ camera }: { camera: Camera }) {
   )
 }
 
-export function MonitorWall({ cameras }: MonitorWallProps) {
+export function MonitorWall({ cameras, immersive = false }: MonitorWallProps) {
   const wallRef = useRef<HTMLElement>(null)
   const gridRef = useRef<HTMLDivElement>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
@@ -294,29 +295,36 @@ export function MonitorWall({ cameras }: MonitorWallProps) {
 
   if (cameras.length === 0) {
     return (
-      <section className="rounded-3xl border border-zinc-300/70 bg-white/85 p-5 shadow-sm backdrop-blur">
-        <h2 className="text-lg font-semibold text-zinc-900">Monitor The Situation</h2>
-        <p className="mt-2 text-sm text-zinc-500">
+      <section
+        className={`p-5 ${
+          immersive
+            ? 'h-full rounded-2xl border border-zinc-700/80 bg-zinc-950/95 shadow-2xl'
+            : 'rounded-3xl border border-zinc-300/70 bg-white/85 shadow-sm backdrop-blur'
+        }`}
+      >
+        <h2 className={`text-lg font-semibold ${immersive ? 'text-zinc-100' : 'text-zinc-900'}`}>
+          Monitor The Situation
+        </h2>
+        <p className={`mt-2 text-sm ${immersive ? 'text-zinc-400' : 'text-zinc-500'}`}>
           No working cameras for this area filter right now.
         </p>
       </section>
     )
   }
 
+  const containerClass = isFullscreen
+    ? 'h-screen border-0 bg-zinc-950 px-3 py-3'
+    : immersive
+      ? 'h-full rounded-2xl border border-zinc-700/80 bg-zinc-950/95 p-3 shadow-[0_30px_80px_-35px_rgba(0,0,0,0.8)]'
+      : 'h-[74vh] rounded-3xl border border-zinc-300/70 bg-zinc-950/95 p-3'
+
   return (
-    <section
-      ref={wallRef}
-      className={`overflow-hidden border ${
-        isFullscreen
-          ? 'h-screen border-0 bg-zinc-950 px-3 py-3'
-          : 'h-[74vh] rounded-3xl border-zinc-300/70 bg-zinc-950/95 p-3'
-      }`}
-    >
+    <section ref={wallRef} className={`overflow-hidden border ${containerClass}`}>
       <div className="mb-3 flex items-center justify-between gap-2">
         <div>
-          <h2 className="text-lg font-semibold text-zinc-100">Monitor The Situation</h2>
+          <h2 className="text-lg font-semibold tracking-tight text-zinc-100">Monitor The Situation</h2>
           <p className="mt-1 text-xs text-zinc-400">
-            {cameras.length} working cameras streaming continuously.
+            {cameras.length} working cameras streaming continuously in command-center mode.
           </p>
         </div>
         <button
@@ -324,7 +332,7 @@ export function MonitorWall({ cameras }: MonitorWallProps) {
           onClick={handleToggleFullscreen}
           className="rounded-full border border-zinc-600 bg-zinc-900 px-4 py-2 text-sm font-medium text-zinc-200 transition hover:border-zinc-400 hover:text-white"
         >
-          {isFullscreen ? 'Exit fullscreen' : 'Fullscreen wall'}
+          {isFullscreen ? 'Exit fullscreen' : immersive ? 'Browser fullscreen' : 'Fullscreen wall'}
         </button>
       </div>
 

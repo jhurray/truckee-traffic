@@ -182,7 +182,7 @@ function App() {
   }, [searchText, tagFilteredCameras])
 
   const monitorCameras = useMemo(() => {
-    return [...tagFilteredCameras]
+    return [...filteredCameras]
       .filter((camera) => isWorkingCamera(camera))
       .sort((left, right) => {
         const areaCompare = left.area.localeCompare(right.area)
@@ -191,7 +191,7 @@ function App() {
         }
         return left.name.localeCompare(right.name)
       })
-  }, [tagFilteredCameras])
+  }, [filteredCameras])
 
   const sortedCameras = useMemo(() => {
     const query = searchText.trim().toLowerCase()
@@ -256,6 +256,196 @@ function App() {
     })
   }
 
+  if (viewMode === 'monitor') {
+    return (
+      <main className="h-screen overflow-hidden bg-[radial-gradient(circle_at_top,_#1f2937_0%,_#09090b_48%,_#020617_100%)] text-zinc-100">
+        <div className="relative h-full">
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(148,163,184,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.08)_1px,transparent_1px)] bg-[size:28px_28px] opacity-20" />
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-cyan-500/10 to-transparent" />
+
+          <div className="relative z-10 flex h-full flex-col">
+            <header className="border-b border-zinc-800/80 bg-zinc-950/70 px-3 py-3 backdrop-blur">
+              <div className="mx-auto max-w-[1800px] space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-cyan-300/80">
+                      Command Center
+                    </p>
+                    <h1 className="mt-1 text-xl font-semibold tracking-tight text-zinc-100">
+                      Monitor The Situation
+                    </h1>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('streams')}
+                      className="rounded-full border border-zinc-600 bg-zinc-900 px-4 py-2 text-sm font-medium text-zinc-200 transition hover:border-zinc-400 hover:text-white"
+                    >
+                      Streams
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('map')}
+                      className="rounded-full border border-zinc-600 bg-zinc-900 px-4 py-2 text-sm font-medium text-zinc-200 transition hover:border-zinc-400 hover:text-white"
+                    >
+                      Map
+                    </button>
+                    <span className="rounded-full border border-cyan-400/40 bg-cyan-500/15 px-3 py-1 font-mono text-xs font-semibold uppercase tracking-wide text-cyan-200">
+                      live wall: {monitorCameras.length}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  {(Object.keys(areaFilterLabelMap) as AreaFilter[]).map((filterOption) => (
+                    <button
+                      key={filterOption}
+                      type="button"
+                      onClick={() => setAreaFilter(filterOption)}
+                      className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                        areaFilter === filterOption
+                          ? 'border border-cyan-400/50 bg-cyan-500/20 text-cyan-100'
+                          : 'border border-zinc-600 bg-zinc-900 text-zinc-300 hover:border-zinc-400 hover:text-zinc-100'
+                      }`}
+                    >
+                      {areaFilterLabelMap[filterOption]}
+                    </button>
+                  ))}
+
+                  <input
+                    type="search"
+                    value={searchText}
+                    onChange={(event) => setSearchText(event.target.value)}
+                    placeholder="Search camera or tag"
+                    className="min-w-[220px] flex-1 rounded-full border border-zinc-600 bg-zinc-900/80 px-4 py-2 text-sm text-zinc-100 outline-none transition placeholder:text-zinc-500 focus:border-cyan-400/70"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => setIsTagBrowserOpen((current) => !current)}
+                    className="rounded-full border border-zinc-600 bg-zinc-900 px-4 py-2 text-sm font-medium text-zinc-200 transition hover:border-zinc-400 hover:text-white"
+                  >
+                    {isTagBrowserOpen ? 'Hide filters' : 'Show filters'}
+                  </button>
+                </div>
+              </div>
+            </header>
+
+            <div className="mx-auto flex min-h-0 w-full max-w-[1800px] flex-1 gap-3 px-3 pb-3 pt-3">
+              {isTagBrowserOpen ? (
+                <aside className="flex h-full w-[320px] shrink-0 flex-col rounded-2xl border border-zinc-700/80 bg-zinc-950/90 p-3 shadow-2xl">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-zinc-400">
+                      Tag filters
+                    </p>
+                    <span className="rounded-full bg-zinc-800 px-2 py-1 text-xs font-medium text-zinc-300">
+                      {selectedTags.length} selected
+                    </span>
+                  </div>
+
+                  <div className="mt-3 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setTagFilterMode('all')}
+                      className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
+                        tagFilterMode === 'all'
+                          ? 'bg-cyan-500/20 text-cyan-100 ring-1 ring-cyan-400/50'
+                          : 'border border-zinc-600 bg-zinc-900 text-zinc-300 hover:border-zinc-400 hover:text-zinc-100'
+                      }`}
+                    >
+                      Match all
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTagFilterMode('any')}
+                      className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
+                        tagFilterMode === 'any'
+                          ? 'bg-cyan-500/20 text-cyan-100 ring-1 ring-cyan-400/50'
+                          : 'border border-zinc-600 bg-zinc-900 text-zinc-300 hover:border-zinc-400 hover:text-zinc-100'
+                      }`}
+                    >
+                      Match any
+                    </button>
+                    {selectedTags.length > 0 ? (
+                      <button
+                        type="button"
+                        onClick={handleClearTags}
+                        className="rounded-full border border-zinc-600 bg-zinc-900 px-3 py-1.5 text-xs font-medium text-zinc-300 transition hover:border-zinc-400 hover:text-zinc-100"
+                      >
+                        Clear
+                      </button>
+                    ) : null}
+                  </div>
+
+                  {selectedTags.length > 0 ? (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {selectedTags.map((tag) => (
+                        <button
+                          key={tag}
+                          type="button"
+                          onClick={() => handleToggleTag(tag)}
+                          className="rounded-full border border-cyan-400/50 bg-cyan-500/20 px-3 py-1 text-xs font-medium text-cyan-100 transition hover:bg-cyan-500/30"
+                        >
+                          {getCameraTagLabel(tag)} ×
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+
+                  <input
+                    type="search"
+                    value={tagSearchText}
+                    onChange={(event) => setTagSearchText(event.target.value)}
+                    placeholder="Search tags..."
+                    className="mt-3 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 outline-none transition placeholder:text-zinc-500 focus:border-cyan-400/70"
+                  />
+
+                  <div className="mt-3 flex-1 space-y-3 overflow-y-auto pr-1">
+                    {filteredTagGroupOptions.length === 0 ? (
+                      <p className="text-sm text-zinc-500">No tags match that search.</p>
+                    ) : (
+                      filteredTagGroupOptions.map((group) => (
+                        <div key={group.group}>
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                            {group.label}
+                          </p>
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            {group.tags.map((tagOption) => {
+                              const isSelected = selectedTagSet.has(tagOption.tag)
+                              return (
+                                <button
+                                  key={tagOption.tag}
+                                  type="button"
+                                  onClick={() => handleToggleTag(tagOption.tag)}
+                                  className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
+                                    isSelected
+                                      ? 'border-cyan-400/50 bg-cyan-500/20 text-cyan-100'
+                                      : 'border-zinc-700 bg-zinc-900 text-zinc-300 hover:border-zinc-500 hover:text-zinc-100'
+                                  }`}
+                                >
+                                  {tagOption.label} ({tagOption.count})
+                                </button>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </aside>
+              ) : null}
+
+              <div className="min-h-0 min-w-0 flex-1">
+                <MonitorWall cameras={monitorCameras} immersive />
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    )
+  }
+
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,_#e2e8f0_0%,_#f8fafc_35%,_#f4f4f5_100%)] px-4 py-8 sm:px-8 lg:px-10">
       <div className="mx-auto max-w-[1400px] space-y-8">
@@ -315,11 +505,7 @@ function App() {
             <button
               type="button"
               onClick={() => setViewMode('monitor')}
-              className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                viewMode === 'monitor'
-                  ? 'bg-zinc-900 text-white'
-                  : 'border border-zinc-300 bg-white text-zinc-700 hover:border-zinc-500 hover:text-zinc-900'
-              }`}
+              className="rounded-full border border-cyan-300 bg-cyan-50 px-4 py-2 text-sm font-medium text-cyan-900 transition hover:border-cyan-500 hover:bg-cyan-100"
             >
               Monitor
             </button>
@@ -457,28 +643,20 @@ function App() {
             ) : null}
           </div>
 
-          {viewMode !== 'monitor' ? (
-            <>
-              <label
-                htmlFor="camera-search"
-                className="mb-2 block font-mono text-xs uppercase tracking-[0.2em] text-zinc-500"
-              >
-                Find camera
-              </label>
-              <input
-                id="camera-search"
-                type="search"
-                value={searchText}
-                onChange={(event) => setSearchText(event.target.value)}
-                placeholder="Search by location or camera name"
-                className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-zinc-900 shadow-inner outline-none transition placeholder:text-zinc-400 focus:border-zinc-900"
-              />
-            </>
-          ) : (
-            <p className="text-sm text-zinc-500">
-              Monitor mode streams all currently working cameras that match selected area and tags.
-            </p>
-          )}
+          <label
+            htmlFor="camera-search"
+            className="mb-2 block font-mono text-xs uppercase tracking-[0.2em] text-zinc-500"
+          >
+            Find camera
+          </label>
+          <input
+            id="camera-search"
+            type="search"
+            value={searchText}
+            onChange={(event) => setSearchText(event.target.value)}
+            placeholder="Search by camera name, area, or tag"
+            className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-zinc-900 shadow-inner outline-none transition placeholder:text-zinc-400 focus:border-zinc-900"
+          />
 
           <div className="mt-4 flex flex-wrap gap-2">
             {viewMode === 'streams' ? (
@@ -499,12 +677,8 @@ function App() {
                   {sortByStatus ? 'Sorting by status' : 'Sorting A-Z'}
                 </button>
               </>
-            ) : viewMode === 'map' ? (
-              <p className="text-xs text-zinc-500">Click a map marker to open its live stream.</p>
             ) : (
-              <p className="text-xs text-zinc-500">
-                Use Fullscreen Wall in monitor mode for a true all-cameras-at-once view.
-              </p>
+              <p className="text-xs text-zinc-500">Click a map marker to open its live stream.</p>
             )}
           </div>
         </section>
@@ -515,8 +689,6 @@ function App() {
             runtimeStatusById={streamControllerState.runtimeById}
             onCameraSelect={handleOpenCameraLightbox}
           />
-        ) : viewMode === 'monitor' ? (
-          <MonitorWall cameras={monitorCameras} />
         ) : (
           <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {sortedCameras.map((camera) => (
