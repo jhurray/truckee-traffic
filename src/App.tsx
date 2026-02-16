@@ -97,6 +97,8 @@ function App() {
   const [areaFilter, setAreaFilter] = useState<AreaFilter>('all')
   const [selectedTags, setSelectedTags] = useState<CameraTag[]>([])
   const [tagFilterMode, setTagFilterMode] = useState<TagFilterMode>('all')
+  const [tagSearchText, setTagSearchText] = useState('')
+  const [isTagBrowserOpen, setIsTagBrowserOpen] = useState(false)
   const [sortByStatus, setSortByStatus] = useState(true)
   const [lightboxCamera, setLightboxCamera] = useState<Camera | null>(null)
   const [streamControllerState, dispatchStreamController] = useReducer(
@@ -146,6 +148,20 @@ function App() {
   const tagGroupOptions = useMemo(() => {
     return getCameraTagGroups(areaFilteredCameras)
   }, [areaFilteredCameras])
+
+  const filteredTagGroupOptions = useMemo(() => {
+    const query = tagSearchText.trim().toLowerCase()
+    if (!query) {
+      return tagGroupOptions
+    }
+
+    return tagGroupOptions
+      .map((group) => ({
+        ...group,
+        tags: group.tags.filter((tagOption) => tagOption.label.toLowerCase().includes(query)),
+      }))
+      .filter((group) => group.tags.length > 0)
+  }, [tagGroupOptions, tagSearchText])
 
   const tagFilteredCameras = useMemo(() => {
     return areaFilteredCameras.filter((camera) =>
@@ -325,6 +341,13 @@ function App() {
               <span className="rounded-full bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-600">
                 {selectedTags.length} selected
               </span>
+              <button
+                type="button"
+                onClick={() => setIsTagBrowserOpen((current) => !current)}
+                className="rounded-full border border-zinc-300 px-3 py-1 text-xs font-medium text-zinc-600 transition hover:border-zinc-500 hover:text-zinc-900"
+              >
+                {isTagBrowserOpen ? 'Hide tag list' : 'Browse tags'}
+              </button>
               {selectedTags.length > 0 ? (
                 <button
                   type="button"
@@ -334,31 +357,6 @@ function App() {
                   Clear tags
                 </button>
               ) : null}
-            </div>
-
-            <div className="mt-3 flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => setTagFilterMode('all')}
-                className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
-                  tagFilterMode === 'all'
-                    ? 'bg-zinc-900 text-white'
-                    : 'border border-zinc-300 bg-white text-zinc-700 hover:border-zinc-500 hover:text-zinc-900'
-                }`}
-              >
-                Match all selected tags
-              </button>
-              <button
-                type="button"
-                onClick={() => setTagFilterMode('any')}
-                className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
-                  tagFilterMode === 'any'
-                    ? 'bg-zinc-900 text-white'
-                    : 'border border-zinc-300 bg-white text-zinc-700 hover:border-zinc-500 hover:text-zinc-900'
-                }`}
-              >
-                Match any selected tag
-              </button>
             </div>
 
             {selectedTags.length > 0 ? (
@@ -374,38 +372,80 @@ function App() {
                   </button>
                 ))}
               </div>
-            ) : null}
+            ) : (
+              <p className="mt-2 text-xs text-zinc-500">
+                Use Browse tags to apply one or more tags.
+              </p>
+            )}
 
-            <div className="mt-4 space-y-3">
-              {tagGroupOptions.map((group) => (
-                <div key={group.group}>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
-                    {group.label}
-                  </p>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {group.tags
-                      .filter((tagOption) => tagOption.count > 0)
-                      .map((tagOption) => {
-                        const isSelected = selectedTagSet.has(tagOption.tag)
-                        return (
-                          <button
-                            key={tagOption.tag}
-                            type="button"
-                            onClick={() => handleToggleTag(tagOption.tag)}
-                            className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
-                              isSelected
-                                ? 'border-zinc-900 bg-zinc-900 text-white'
-                                : 'border-zinc-300 bg-white text-zinc-700 hover:border-zinc-500 hover:text-zinc-900'
-                            }`}
-                          >
-                            {tagOption.label} ({tagOption.count})
-                          </button>
-                        )
-                      })}
-                  </div>
+            {isTagBrowserOpen ? (
+              <div className="mt-3 rounded-xl border border-zinc-200 bg-white p-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <input
+                    type="search"
+                    value={tagSearchText}
+                    onChange={(event) => setTagSearchText(event.target.value)}
+                    placeholder="Search tags..."
+                    className="min-w-[220px] flex-1 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-zinc-900"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setTagFilterMode('all')}
+                    className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
+                      tagFilterMode === 'all'
+                        ? 'bg-zinc-900 text-white'
+                        : 'border border-zinc-300 bg-white text-zinc-700 hover:border-zinc-500 hover:text-zinc-900'
+                    }`}
+                  >
+                    Match all
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTagFilterMode('any')}
+                    className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
+                      tagFilterMode === 'any'
+                        ? 'bg-zinc-900 text-white'
+                        : 'border border-zinc-300 bg-white text-zinc-700 hover:border-zinc-500 hover:text-zinc-900'
+                    }`}
+                  >
+                    Match any
+                  </button>
                 </div>
-              ))}
-            </div>
+
+                <div className="mt-3 max-h-64 space-y-3 overflow-y-auto pr-1">
+                  {filteredTagGroupOptions.length === 0 ? (
+                    <p className="text-sm text-zinc-500">No tags match that search.</p>
+                  ) : (
+                    filteredTagGroupOptions.map((group) => (
+                      <div key={group.group}>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                          {group.label}
+                        </p>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {group.tags.map((tagOption) => {
+                            const isSelected = selectedTagSet.has(tagOption.tag)
+                            return (
+                              <button
+                                key={tagOption.tag}
+                                type="button"
+                                onClick={() => handleToggleTag(tagOption.tag)}
+                                className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
+                                  isSelected
+                                    ? 'border-zinc-900 bg-zinc-900 text-white'
+                                    : 'border-zinc-300 bg-white text-zinc-700 hover:border-zinc-500 hover:text-zinc-900'
+                                }`}
+                              >
+                                {tagOption.label} ({tagOption.count})
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            ) : null}
           </div>
 
           {viewMode !== 'monitor' ? (
