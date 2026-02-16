@@ -64,12 +64,57 @@ function calculateBestLayout(
 
 function MonitorFeedTile({ camera }: { camera: Camera }) {
   const [status, setStatus] = useState<MonitorStatus>('loading')
+  const [snapshotVersion, setSnapshotVersion] = useState(() => Date.now())
   const videoRef = useRef<HTMLVideoElement>(null)
   const hlsRef = useRef<Hls | null>(null)
+  const feed = camera.feed
+  const hlsPlaylistUrl = feed.kind === 'hls' ? feed.playlistUrl : null
+  const snapshotRefreshSeconds = feed.kind === 'snapshot' ? feed.refreshSeconds : null
+  const snapshotStreamUrl = useMemo(() => {
+    if (feed.kind !== 'snapshot') {
+      return ''
+    }
+
+    const separator = feed.imageUrl.includes('?') ? '&' : '?'
+    return `${feed.imageUrl}${separator}v=${snapshotVersion}`
+  }, [feed, snapshotVersion])
+
+  useEffect(() => {
+    if (feed.kind !== 'snapshot' || !snapshotRefreshSeconds) {
+      return
+    }
+
+    setStatus('loading')
+    setSnapshotVersion(Date.now())
+    const interval = window.setInterval(() => {
+      setSnapshotVersion(Date.now())
+    }, snapshotRefreshSeconds * 1000)
+
+    return () => {
+      window.clearInterval(interval)
+    }
+  }, [feed.kind, snapshotRefreshSeconds])
 
   useEffect(() => {
     const video = videoRef.current
-    if (!video) {
+    if (feed.kind !== 'hls') {
+      if (hlsRef.current) {
+        hlsRef.current.destroy()
+        hlsRef.current = null
+      }
+
+      if (video) {
+        video.pause()
+        video.removeAttribute('src')
+        video.load()
+      }
+
+      setStatus('loading')
+      return
+    }
+
+    if (!video || !hlsPlaylistUrl) {
+      setStatus('error')
       return
     }
 
@@ -90,7 +135,7 @@ function MonitorFeedTile({ camera }: { camera: Camera }) {
 
     const startPlayback = async () => {
       if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = camera.streamUrl
+        video.src = hlsPlaylistUrl
         video.load()
         return
       }
@@ -112,7 +157,7 @@ function MonitorFeedTile({ camera }: { camera: Camera }) {
       })
 
       hlsRef.current = hls
-      hls.loadSource(camera.streamUrl)
+      hls.loadSource(hlsPlaylistUrl)
       hls.attachMedia(video)
       hls.on(HlsPlayer.Events.ERROR, (_event, data) => {
         if (data.fatal) {
@@ -131,18 +176,39 @@ function MonitorFeedTile({ camera }: { camera: Camera }) {
         hlsRef.current = null
       }
     }
-  }, [camera.streamUrl])
+  }, [feed.kind, hlsPlaylistUrl])
 
   return (
     <article className="relative overflow-hidden rounded-lg border border-zinc-700 bg-black">
-      <video
-        ref={videoRef}
-        className="h-full w-full object-cover"
-        muted
-        playsInline
-        autoPlay
-        poster={camera.posterUrl}
-      />
+      {feed.kind === 'hls' ? (
+        <video
+          ref={videoRef}
+          className="h-full w-full object-cover"
+          muted
+          playsInline
+          autoPlay
+          poster={feed.posterUrl}
+        />
+      ) : feed.kind === 'iframe' ? (
+        <iframe
+          src={feed.embedUrl}
+          className="h-full w-full"
+          allow="autoplay; fullscreen; picture-in-picture"
+          allowFullScreen
+          title={`${camera.name} stream`}
+          onLoad={() => setStatus('ready')}
+          onError={() => setStatus('error')}
+        />
+      ) : (
+        <img
+          src={snapshotStreamUrl}
+          alt={`${camera.name} live snapshot`}
+          className="h-full w-full object-cover"
+          loading="eager"
+          onLoad={() => setStatus('ready')}
+          onError={() => setStatus('error')}
+        />
+      )}
       <div className="absolute inset-x-0 top-0 bg-gradient-to-b from-black/70 to-transparent px-2 py-2">
         <div className="flex items-start justify-between gap-2">
           <div>

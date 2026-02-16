@@ -27,10 +27,23 @@ function getStatusLabel(runtimeStatus: StreamRuntimeStatus) {
 export function CameraLightbox({ camera, onClose }: CameraLightboxProps) {
   const [isMuted, setIsMuted] = useState(true)
   const [runtimeStatus, setRuntimeStatus] = useState<StreamRuntimeStatus>('loading')
+  const [snapshotVersion, setSnapshotVersion] = useState(() => Date.now())
   const videoRef = useRef<HTMLVideoElement>(null)
   const hlsRef = useRef<Hls | null>(null)
+  const feed = camera.feed
+  const canMute = feed.kind === 'hls'
+  const hlsPlaylistUrl = feed.kind === 'hls' ? feed.playlistUrl : null
+  const snapshotRefreshSeconds = feed.kind === 'snapshot' ? feed.refreshSeconds : null
 
   const statusLabel = useMemo(() => getStatusLabel(runtimeStatus), [runtimeStatus])
+  const snapshotStreamUrl = useMemo(() => {
+    if (feed.kind !== 'snapshot') {
+      return ''
+    }
+
+    const separator = feed.imageUrl.includes('?') ? '&' : '?'
+    return `${feed.imageUrl}${separator}v=${snapshotVersion}`
+  }, [feed, snapshotVersion])
 
   useEffect(() => {
     const onEscape = (event: KeyboardEvent) => {
@@ -46,8 +59,30 @@ export function CameraLightbox({ camera, onClose }: CameraLightboxProps) {
   }, [onClose])
 
   useEffect(() => {
+    if (feed.kind !== 'snapshot' || !snapshotRefreshSeconds) {
+      return
+    }
+
+    setRuntimeStatus('loading')
+    setSnapshotVersion(Date.now())
+    const interval = window.setInterval(() => {
+      setSnapshotVersion(Date.now())
+    }, snapshotRefreshSeconds * 1000)
+
+    return () => {
+      window.clearInterval(interval)
+    }
+  }, [feed.kind, snapshotRefreshSeconds])
+
+  useEffect(() => {
     const video = videoRef.current
-    if (!video) {
+    if (feed.kind !== 'hls') {
+      setRuntimeStatus('loading')
+      return
+    }
+
+    if (!video || !hlsPlaylistUrl) {
+      setRuntimeStatus('error')
       return
     }
 
@@ -67,7 +102,7 @@ export function CameraLightbox({ camera, onClose }: CameraLightboxProps) {
 
     const startPlayback = async () => {
       if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = camera.streamUrl
+        video.src = hlsPlaylistUrl
         video.load()
         return
       }
@@ -89,7 +124,7 @@ export function CameraLightbox({ camera, onClose }: CameraLightboxProps) {
       })
 
       hlsRef.current = hls
-      hls.loadSource(camera.streamUrl)
+      hls.loadSource(hlsPlaylistUrl)
       hls.attachMedia(video)
       hls.on(HlsPlayer.Events.ERROR, (_event, data) => {
         if (data.fatal) {
@@ -108,7 +143,7 @@ export function CameraLightbox({ camera, onClose }: CameraLightboxProps) {
         hlsRef.current = null
       }
     }
-  }, [camera.streamUrl])
+  }, [feed.kind, hlsPlaylistUrl])
 
   useEffect(() => {
     if (videoRef.current) {
@@ -152,19 +187,40 @@ export function CameraLightbox({ camera, onClose }: CameraLightboxProps) {
         </header>
 
         <div className="relative aspect-video bg-black">
-          <video
-            ref={videoRef}
-            className="h-full w-full object-cover"
-            controls
-            playsInline
-            muted={isMuted}
-            poster={camera.posterUrl}
-            autoPlay
-          />
+          {feed.kind === 'hls' ? (
+            <video
+              ref={videoRef}
+              className="h-full w-full object-cover"
+              controls
+              playsInline
+              muted={isMuted}
+              poster={feed.posterUrl}
+              autoPlay
+            />
+          ) : feed.kind === 'iframe' ? (
+            <iframe
+              src={feed.embedUrl}
+              className="h-full w-full"
+              allow="autoplay; fullscreen; picture-in-picture"
+              allowFullScreen
+              title={`${camera.name} stream`}
+              onLoad={() => setRuntimeStatus('ready')}
+              onError={() => setRuntimeStatus('error')}
+            />
+          ) : (
+            <img
+              src={snapshotStreamUrl}
+              alt={`${camera.name} live snapshot`}
+              className="h-full w-full object-cover"
+              loading="eager"
+              onLoad={() => setRuntimeStatus('ready')}
+              onError={() => setRuntimeStatus('error')}
+            />
+          )}
         </div>
 
         <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-zinc-800 px-4 py-3 sm:px-5">
-          <div className="flex flex-wrap gap-2">
+          {canMute ? (
             <button
               type="button"
               onClick={() => setIsMuted((current) => !current)}
@@ -172,7 +228,11 @@ export function CameraLightbox({ camera, onClose }: CameraLightboxProps) {
             >
               {isMuted ? 'Unmute' : 'Mute'}
             </button>
-          </div>
+          ) : (
+            <p className="text-xs text-zinc-500">
+              Audio controls are managed by the upstream provider player.
+            </p>
+          )}
           <p className="text-xs text-zinc-500">Click outside the player or press Esc to close.</p>
         </footer>
       </div>

@@ -55,7 +55,7 @@ export function CameraMap({ cameras, runtimeStatusById, onCameraSelect }: Camera
       <div className="border-b border-zinc-200 px-4 py-3 sm:px-5">
         <h2 className="text-lg font-semibold text-zinc-900">Camera Map</h2>
         <p className="mt-1 text-xs text-zinc-500">
-          Marker coordinates are estimated from camera names and nearby roads.
+          Marker coordinates are best effort and can be edited in the camera catalog.
         </p>
       </div>
 

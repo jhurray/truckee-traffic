@@ -3,11 +3,17 @@ import { CameraLightbox } from './components/CameraLightbox'
 import { CameraMap } from './components/CameraMap'
 import { MonitorWall } from './components/MonitorWall'
 import { CameraTile } from './components/CameraTile'
-import { cameras } from './data/cameras'
-import type { Camera } from './data/cameras'
+import {
+  areaFilterLabelMap,
+  cameras,
+  getCameraStatusSortRank,
+  isWorkingCamera,
+  matchesAreaFilter,
+  type AreaFilter,
+} from './data/cameraCatalog'
+import type { Camera } from './data/cameraModel'
 import type { StreamRuntimeStatus } from './types/stream'
 
-type AreaFilter = 'all' | 'truckee' | 'south-lake'
 type ViewMode = 'streams' | 'map' | 'monitor'
 
 type StreamControllerState = {
@@ -19,12 +25,6 @@ type StreamControllerAction =
   | { type: 'toggle_one'; cameraId: string }
   | { type: 'set_all'; value: boolean }
   | { type: 'runtime_update'; cameraId: string; status: StreamRuntimeStatus }
-
-const areaFilterLabelMap: Record<AreaFilter, string> = {
-  all: 'All',
-  truckee: 'Truckee',
-  'south-lake': 'South Lake',
-}
 
 function createInitialStreamControllerState(): StreamControllerState {
   const activeById = Object.fromEntries(
@@ -85,24 +85,6 @@ function streamControllerReducer(
   }
 }
 
-function getStatusSortRank(camera: Camera, runtimeStatusById: Record<string, StreamRuntimeStatus>) {
-  const runtimeStatus = runtimeStatusById[camera.id]
-
-  if (runtimeStatus === 'error') {
-    return 4
-  }
-
-  if (camera.health === 'offline') {
-    return 3
-  }
-
-  if (runtimeStatus === 'loading') {
-    return 1
-  }
-
-  return 0
-}
-
 function App() {
   const [viewMode, setViewMode] = useState<ViewMode>('streams')
   const [searchText, setSearchText] = useState('')
@@ -135,9 +117,7 @@ function App() {
   }, [])
 
   const areaFilteredCameras = useMemo(() => {
-    return cameras.filter((camera) => {
-      return areaFilter === 'all' ? true : camera.region === areaFilter
-    })
+    return cameras.filter((camera) => matchesAreaFilter(camera, areaFilter))
   }, [areaFilter])
 
   const filteredCameras = useMemo(() => {
@@ -155,7 +135,7 @@ function App() {
 
   const monitorCameras = useMemo(() => {
     return [...areaFilteredCameras]
-      .filter((camera) => camera.health === 'live')
+      .filter((camera) => isWorkingCamera(camera))
       .sort((left, right) => {
         const areaCompare = left.area.localeCompare(right.area)
         if (areaCompare !== 0) {
@@ -168,8 +148,8 @@ function App() {
   const sortedCameras = useMemo(() => {
     return [...filteredCameras].sort((left, right) => {
       if (sortByStatus) {
-        const leftRank = getStatusSortRank(left, streamControllerState.runtimeById)
-        const rightRank = getStatusSortRank(right, streamControllerState.runtimeById)
+        const leftRank = getCameraStatusSortRank(left, streamControllerState.runtimeById)
+        const rightRank = getCameraStatusSortRank(right, streamControllerState.runtimeById)
         if (leftRank !== rightRank) {
           return leftRank - rightRank
         }
@@ -215,8 +195,9 @@ function App() {
             Tahoe and Truckee camera dashboard
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-zinc-600 sm:text-base">
-            Streams are sourced from public Brownrice HLS endpoints used by tahoeweathercam.
-            Start only the cameras you need to keep bandwidth and CPU usage manageable.
+            Streams are sourced from public traffic, resort, and community feeds across Caltrans,
+            Brownrice, Ozolio, and HDOnTap. Start only the cameras you need to keep bandwidth and
+            CPU usage manageable.
           </p>
 
           <div className="mt-6 flex flex-wrap items-center gap-2">

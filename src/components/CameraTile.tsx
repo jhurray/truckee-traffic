@@ -31,8 +31,13 @@ export function CameraTile({
   onRuntimeStatusChange,
 }: CameraTileProps) {
   const [isMuted, setIsMuted] = useState(true)
+  const [snapshotVersion, setSnapshotVersion] = useState(() => Date.now())
   const videoRef = useRef<HTMLVideoElement>(null)
   const hlsRef = useRef<Hls | null>(null)
+  const feed = camera.feed
+  const hlsPlaylistUrl = feed.kind === 'hls' ? feed.playlistUrl : null
+  const snapshotRefreshSeconds = feed.kind === 'snapshot' ? feed.refreshSeconds : null
+  const canMute = feed.kind === 'hls'
 
   const statusLabel = useMemo(() => {
     if (!isStreaming) {
@@ -54,11 +59,40 @@ export function CameraTile({
     return 'Paused'
   }, [isStreaming, runtimeStatus])
 
+  const previewImageUrl = useMemo(() => {
+    if (feed.kind === 'snapshot') {
+      return feed.imageUrl
+    }
+
+    return feed.posterUrl
+  }, [feed])
+
+  const snapshotStreamUrl = useMemo(() => {
+    if (feed.kind !== 'snapshot') {
+      return ''
+    }
+
+    const separator = feed.imageUrl.includes('?') ? '&' : '?'
+    return `${feed.imageUrl}${separator}v=${snapshotVersion}`
+  }, [feed, snapshotVersion])
+
   useEffect(() => {
-    const video = videoRef.current
-    if (!video) {
+    if (!isStreaming || feed.kind !== 'snapshot' || !snapshotRefreshSeconds) {
       return
     }
+
+    setSnapshotVersion(Date.now())
+    const interval = window.setInterval(() => {
+      setSnapshotVersion(Date.now())
+    }, snapshotRefreshSeconds * 1000)
+
+    return () => {
+      window.clearInterval(interval)
+    }
+  }, [feed.kind, isStreaming, snapshotRefreshSeconds])
+
+  useEffect(() => {
+    const video = videoRef.current
 
     if (!isStreaming) {
       if (hlsRef.current) {
@@ -66,10 +100,34 @@ export function CameraTile({
         hlsRef.current = null
       }
 
-      video.pause()
-      video.removeAttribute('src')
-      video.load()
+      if (video) {
+        video.pause()
+        video.removeAttribute('src')
+        video.load()
+      }
+
       onRuntimeStatusChange(camera.id, 'idle')
+      return
+    }
+
+    if (feed.kind === 'iframe' || feed.kind === 'snapshot') {
+      if (hlsRef.current) {
+        hlsRef.current.destroy()
+        hlsRef.current = null
+      }
+
+      if (video) {
+        video.pause()
+        video.removeAttribute('src')
+        video.load()
+      }
+
+      onRuntimeStatusChange(camera.id, 'loading')
+      return
+    }
+
+    if (!video || !hlsPlaylistUrl) {
+      onRuntimeStatusChange(camera.id, 'error')
       return
     }
 
@@ -91,7 +149,7 @@ export function CameraTile({
 
     const startPlayback = async () => {
       if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = camera.streamUrl
+        video.src = hlsPlaylistUrl
         video.load()
         return
       }
@@ -113,7 +171,7 @@ export function CameraTile({
       })
 
       hlsRef.current = hls
-      hls.loadSource(camera.streamUrl)
+      hls.loadSource(hlsPlaylistUrl)
       hls.attachMedia(video)
       hls.on(HlsPlayer.Events.ERROR, (_event, data) => {
         if (data.fatal) {
@@ -132,7 +190,7 @@ export function CameraTile({
         hlsRef.current = null
       }
     }
-  }, [camera.id, camera.streamUrl, isStreaming, onRuntimeStatusChange])
+  }, [camera.id, feed.kind, hlsPlaylistUrl, isStreaming, onRuntimeStatusChange])
 
   useEffect(() => {
     if (videoRef.current) {
@@ -144,22 +202,49 @@ export function CameraTile({
     <article className="group overflow-hidden rounded-2xl border border-zinc-200 bg-white/90 shadow-sm backdrop-blur transition hover:border-zinc-300 hover:shadow-lg">
       <div className="relative aspect-video bg-zinc-900">
         {isStreaming ? (
-          <video
-            ref={videoRef}
-            className="h-full w-full object-cover"
-            controls
-            playsInline
-            muted={isMuted}
-            poster={camera.posterUrl}
-          />
+          feed.kind === 'hls' ? (
+            <video
+              ref={videoRef}
+              className="h-full w-full object-cover"
+              controls
+              playsInline
+              muted={isMuted}
+              poster={feed.posterUrl}
+            />
+          ) : feed.kind === 'iframe' ? (
+            <iframe
+              src={feed.embedUrl}
+              className="h-full w-full"
+              allow="autoplay; fullscreen; picture-in-picture"
+              allowFullScreen
+              title={`${camera.name} stream`}
+              onLoad={() => onRuntimeStatusChange(camera.id, 'ready')}
+              onError={() => onRuntimeStatusChange(camera.id, 'error')}
+            />
+          ) : (
+            <img
+              src={snapshotStreamUrl}
+              alt={`${camera.name} live snapshot`}
+              className="h-full w-full object-cover"
+              loading="eager"
+              onLoad={() => onRuntimeStatusChange(camera.id, 'ready')}
+              onError={() => onRuntimeStatusChange(camera.id, 'error')}
+            />
+          )
         ) : (
           <>
-            <img
-              src={camera.posterUrl}
-              alt={`${camera.name} preview`}
-              className="h-full w-full object-cover"
-              loading="lazy"
-            />
+            {previewImageUrl ? (
+              <img
+                src={previewImageUrl}
+                alt={`${camera.name} preview`}
+                className="h-full w-full object-cover"
+                loading="lazy"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-zinc-800 text-xs text-zinc-300">
+                Preview unavailable
+              </div>
+            )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/65 to-black/20" />
           </>
         )}
@@ -194,10 +279,10 @@ export function CameraTile({
           <button
             type="button"
             onClick={() => setIsMuted((current) => !current)}
-            disabled={!isStreaming}
+            disabled={!isStreaming || !canMute}
             className="rounded-full border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:border-zinc-500 hover:text-zinc-900 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {isMuted ? 'Unmute' : 'Mute'}
+            {canMute ? (isMuted ? 'Unmute' : 'Mute') : 'Audio in provider player'}
           </button>
         </div>
 

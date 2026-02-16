@@ -1,23 +1,17 @@
-export type CameraHealth = 'live' | 'offline' | 'unverified'
-export type CameraRegion = 'truckee' | 'south-lake' | 'other'
-
-export type CameraCoordinates = {
-  lat: number
-  lng: number
-  estimated: boolean
-}
-
-export type Camera = {
-  id: string
-  name: string
-  area: string
-  region: CameraRegion
-  sourcePage: string
-  streamUrl: string
-  posterUrl: string
-  health: CameraHealth
-  coordinates: CameraCoordinates
-}
+import type { Camera } from './cameraModel'
+export type {
+  Camera,
+  CameraCategory,
+  CameraCoordinates,
+  CameraFeed,
+  CameraHealth,
+  CameraPriority,
+  CameraRegion,
+  CameraSource,
+  HlsFeed,
+  IframeFeed,
+  SnapshotFeed,
+} from './cameraModel'
 
 export const cameras: Camera[] = [
   {
@@ -25,155 +19,612 @@ export const cameras: Camera[] = [
     name: 'Uphill Northwoods',
     area: 'Truckee',
     region: 'truckee',
-    sourcePage: 'https://tahoeweathercam.com/uphillnorthwoods.html',
-    streamUrl:
-      'https://live6.brownrice.com:444/communityink2/communityink2.stream/main_playlist.m3u8',
-    posterUrl: 'https://live6.brownrice.com/cam-images/communityink2.jpg',
+    category: 'community',
+    priority: 'high',
     health: 'live',
     coordinates: { lat: 39.3263, lng: -120.2189, estimated: false },
+    feed: {
+      kind: 'hls',
+      playlistUrl:
+        'https://live6.brownrice.com:444/communityink2/communityink2.stream/main_playlist.m3u8',
+      posterUrl: 'https://live6.brownrice.com/cam-images/communityink2.jpg',
+    },
+    source: {
+      provider: 'brownrice',
+      pageUrl: 'https://tahoeweathercam.com/uphillnorthwoods.html',
+      extractor: 'brownrice-embed',
+    },
   },
   {
     id: 'communityinkdonnerpass',
     name: 'Donner Pass Rd',
     area: 'Truckee',
     region: 'truckee',
-    sourcePage: 'https://tahoeweathercam.com/ebdonnerpass.html',
-    streamUrl:
-      'https://live6.brownrice.com:444/communityinkdonnerpass/communityinkdonnerpass.stream/main_playlist.m3u8',
-    posterUrl: 'https://live6.brownrice.com/cam-images/communityinkdonnerpass.jpg',
+    category: 'community',
+    priority: 'high',
     health: 'live',
     coordinates: { lat: 39.3249, lng: -120.2143, estimated: false },
-  },
-  {
-    id: 'i80westtruckee',
-    name: 'I-80 West',
-    area: 'Truckee',
-    region: 'truckee',
-    sourcePage: 'https://tahoeweathercam.com/i80truckee.html',
-    streamUrl:
-      'https://live6.brownrice.com:444/i80westtruckee/i80westtruckee.stream/playlist.m3u8',
-    posterUrl: 'https://live6.brownrice.com/cam-images/i80westtruckee.jpg',
-    health: 'live',
-    coordinates: { lat: 39.3386, lng: -120.1749, estimated: true },
+    feed: {
+      kind: 'hls',
+      playlistUrl:
+        'https://live6.brownrice.com:444/communityinkdonnerpass/communityinkdonnerpass.stream/main_playlist.m3u8',
+      posterUrl: 'https://live6.brownrice.com/cam-images/communityinkdonnerpass.jpg',
+    },
+    source: {
+      provider: 'brownrice',
+      pageUrl: 'https://tahoeweathercam.com/ebdonnerpass.html',
+      extractor: 'brownrice-embed',
+    },
   },
   {
     id: 'communityinkcalinorthwood',
     name: 'Northwoods and Northwoods',
     area: 'Truckee',
     region: 'truckee',
-    sourcePage: 'https://tahoeweathercam.com/northwoodsnorthwoods.html',
-    streamUrl:
-      'https://live6.brownrice.com:444/communityinkcalinorthwood/communityinkcalinorthwood.stream/main_playlist.m3u8',
-    posterUrl: 'https://live6.brownrice.com/cam-images/communityinkcalinorthwood.jpg',
+    category: 'community',
+    priority: 'high',
     health: 'live',
     coordinates: { lat: 39.3436395, lng: -120.214921, estimated: false },
+    feed: {
+      kind: 'hls',
+      playlistUrl:
+        'https://live6.brownrice.com:444/communityinkcalinorthwood/communityinkcalinorthwood.stream/main_playlist.m3u8',
+      posterUrl: 'https://live6.brownrice.com/cam-images/communityinkcalinorthwood.jpg',
+    },
+    source: {
+      provider: 'brownrice',
+      pageUrl: 'https://tahoeweathercam.com/northwoodsnorthwoods.html',
+      extractor: 'brownrice-embed',
+    },
   },
   {
     id: 'communityinkhwy89',
     name: 'Mountain Hardware',
     area: 'Truckee',
     region: 'truckee',
-    sourcePage: 'https://tahoeweathercam.com/mthardware.html',
-    streamUrl:
-      'https://live6.brownrice.com:444/communityinkhwy89/communityinkhwy89.stream/main_playlist.m3u8',
-    posterUrl: 'https://live6.brownrice.com/cam-images/communityinkhwy89.jpg',
+    category: 'community',
+    priority: 'high',
     health: 'live',
     coordinates: { lat: 39.3261644, lng: -120.2079373, estimated: false },
+    feed: {
+      kind: 'hls',
+      playlistUrl:
+        'https://live6.brownrice.com:444/communityinkhwy89/communityinkhwy89.stream/main_playlist.m3u8',
+      posterUrl: 'https://live6.brownrice.com/cam-images/communityinkhwy89.jpg',
+    },
+    source: {
+      provider: 'brownrice',
+      pageUrl: 'https://tahoeweathercam.com/mthardware.html',
+      extractor: 'brownrice-embed',
+    },
   },
   {
-    id: 'communityinkdntwntruckee',
-    name: 'Downtown Roundabout',
+    id: 'caltrans_80_kingvale_eb',
+    name: 'Kingvale Eastbound',
+    area: 'I-80',
+    region: 'other',
+    category: 'traffic',
+    priority: 'critical',
+    health: 'offline',
+    coordinates: { lat: 39.3106, lng: -120.4243, estimated: false },
+    feed: {
+      kind: 'snapshot',
+      imageUrl:
+        'https://cwwp2.dot.ca.gov/data/d3/cctv/image/hwy80atkingvaleeb/hwy80atkingvaleeb.jpg',
+      refreshSeconds: 45,
+    },
+    source: {
+      provider: 'caltrans',
+      pageUrl: 'https://cwwp2.dot.ca.gov/vm/loc/d3/hwy80atkingvaleeb.htm',
+      extractor: 'caltrans-loc-page',
+      notes: 'HLS endpoint currently returns 404; using refresh snapshot.',
+    },
+  },
+  {
+    id: 'caltrans_80_kingvale_wb',
+    name: 'Kingvale Westbound',
+    area: 'I-80',
+    region: 'other',
+    category: 'traffic',
+    priority: 'critical',
+    health: 'live',
+    coordinates: { lat: 39.3106, lng: -120.4243, estimated: false },
+    feed: {
+      kind: 'hls',
+      playlistUrl: 'https://wzmedia.dot.ca.gov/D3/80_Kingvale_PLA80_WB.stream/playlist.m3u8',
+      posterUrl:
+        'https://cwwp2.dot.ca.gov/data/d3/cctv/image/hwy80atkingvalewb/hwy80atkingvalewb.jpg',
+    },
+    source: {
+      provider: 'caltrans',
+      pageUrl: 'https://cwwp2.dot.ca.gov/vm/loc/d3/hwy80atkingvalewb.htm',
+      extractor: 'caltrans-loc-page',
+    },
+  },
+  {
+    id: 'caltrans_80_sodasprings_eb',
+    name: 'Soda Springs Eastbound',
+    area: 'I-80',
+    region: 'other',
+    category: 'traffic',
+    priority: 'high',
+    health: 'live',
+    coordinates: { lat: 39.3205, lng: -120.3855, estimated: false },
+    feed: {
+      kind: 'hls',
+      playlistUrl: 'https://wzmedia.dot.ca.gov/D3/80_Soda_Springs_NEV80_EB.stream/playlist.m3u8',
+      posterUrl:
+        'https://cwwp2.dot.ca.gov/data/d3/cctv/image/hwy80atsodaspringseb/hwy80atsodaspringseb.jpg',
+    },
+    source: {
+      provider: 'caltrans',
+      pageUrl: 'https://cwwp2.dot.ca.gov/vm/loc/d3/hwy80atsodaspringseb.htm',
+      extractor: 'caltrans-loc-page',
+    },
+  },
+  {
+    id: 'caltrans_80_sodasprings_wb',
+    name: 'Soda Springs Westbound',
+    area: 'I-80',
+    region: 'other',
+    category: 'traffic',
+    priority: 'high',
+    health: 'unverified',
+    coordinates: { lat: 39.3205, lng: -120.3855, estimated: false },
+    feed: {
+      kind: 'snapshot',
+      imageUrl:
+        'https://cwwp2.dot.ca.gov/data/d3/cctv/image/hwy80atsodaspringswb/hwy80atsodaspringswb.jpg',
+      refreshSeconds: 45,
+    },
+    source: {
+      provider: 'caltrans',
+      pageUrl: 'https://cwwp2.dot.ca.gov/vm/loc/d3/hwy80atsodaspringswb.htm',
+      extractor: 'caltrans-loc-page',
+      notes: 'Source page currently returns 500 intermittently.',
+    },
+  },
+  {
+    id: 'caltrans_80_castlepeak',
+    name: 'Castle Peak',
+    area: 'I-80',
+    region: 'other',
+    category: 'traffic',
+    priority: 'high',
+    health: 'live',
+    coordinates: { lat: 39.333, lng: -120.3582, estimated: false },
+    feed: {
+      kind: 'hls',
+      playlistUrl: 'https://wzmedia.dot.ca.gov/D3/80_Castle_Peak_NEV80_EB.stream/playlist.m3u8',
+      posterUrl:
+        'https://cwwp2.dot.ca.gov/data/d3/cctv/image/hwy80atcastlepeak/hwy80atcastlepeak.jpg',
+    },
+    source: {
+      provider: 'caltrans',
+      pageUrl: 'https://cwwp2.dot.ca.gov/vm/loc/d3/hwy80atcastlepeak.htm',
+      extractor: 'caltrans-loc-page',
+    },
+  },
+  {
+    id: 'caltrans_80_donnersummit',
+    name: 'Donner Summit Rest Area',
+    area: 'I-80',
+    region: 'other',
+    category: 'traffic',
+    priority: 'critical',
+    health: 'unverified',
+    coordinates: { lat: 39.3365, lng: -120.3357, estimated: false },
+    feed: {
+      kind: 'hls',
+      playlistUrl:
+        'https://wzmedia.dot.ca.gov/D3/80_Donner_Summit_JWO_NEV80_EB.stream/playlist.m3u8',
+      posterUrl:
+        'https://cwwp2.dot.ca.gov/data/d3/cctv/image/hwy80atdonnersummit/hwy80atdonnersummit.jpg',
+    },
+    source: {
+      provider: 'caltrans',
+      pageUrl: 'https://cwwp2.dot.ca.gov/vm/loc/d3/hwy80atdonnersummit.htm',
+      extractor: 'caltrans-loc-page',
+      notes: 'HLS access can intermittently return 403 from non-browser clients.',
+    },
+  },
+  {
+    id: 'caltrans_80_donnerlake',
+    name: 'Donner Lake Interchange',
+    area: 'I-80',
+    region: 'truckee',
+    category: 'traffic',
+    priority: 'critical',
+    health: 'live',
+    coordinates: { lat: 39.3248, lng: -120.2185, estimated: false },
+    feed: {
+      kind: 'hls',
+      playlistUrl:
+        'https://wzmedia.dot.ca.gov/D3/80_Donner_Lake_Rd_JEO_NEV80_WB.stream/playlist.m3u8',
+      posterUrl:
+        'https://cwwp2.dot.ca.gov/data/d3/cctv/image/hwy80atdonnerlake/hwy80atdonnerlake.jpg',
+    },
+    source: {
+      provider: 'caltrans',
+      pageUrl: 'https://cwwp2.dot.ca.gov/vm/loc/d3/hwy80atdonnerlake.htm',
+      extractor: 'caltrans-loc-page',
+    },
+  },
+  {
+    id: 'caltrans_80_truckeescales',
+    name: 'Truckee Scales',
+    area: 'I-80',
+    region: 'truckee',
+    category: 'traffic',
+    priority: 'critical',
+    health: 'live',
+    coordinates: { lat: 39.3402, lng: -120.1558, estimated: false },
+    feed: {
+      kind: 'hls',
+      playlistUrl:
+        'https://wzmedia.dot.ca.gov/D3/80_Truckee_Scales_NEV80_WB.stream/playlist.m3u8',
+      posterUrl:
+        'https://cwwp2.dot.ca.gov/data/d3/cctv/image/hwy80attruckeescales/hwy80attruckeescales.jpg',
+    },
+    source: {
+      provider: 'caltrans',
+      pageUrl: 'https://cwwp2.dot.ca.gov/vm/loc/d3/hwy80attruckeescales.htm',
+      extractor: 'caltrans-loc-page',
+    },
+  },
+  {
+    id: 'caltrans_89_westriver',
+    name: 'Hwy 89 at West River St',
     area: 'Truckee',
     region: 'truckee',
-    sourcePage: 'https://tahoeweathercam.com/downtowntruckee.html',
-    streamUrl:
-      'https://5f9f690034fb0.streamlock.net:444/communityinkdntwntruckee/communityinkdntwntruckee.stream/main_playlist.m3u8',
-    posterUrl: 'https://live6.brownrice.com/cam-images/communityinkdntwntruckee.jpg',
-    health: 'offline',
-    coordinates: { lat: 39.3278, lng: -120.1832, estimated: true },
-  },
-  {
-    id: 'communityinktahoesouth',
-    name: 'Lake Tahoe Blvd',
-    area: 'South Lake Tahoe',
-    region: 'south-lake',
-    sourcePage: 'https://tahoeweathercam.com/hwy50alamedaave.html',
-    streamUrl:
-      'https://live6.brownrice.com:444/communityinktahoesouth/communityinktahoesouth.stream/main_playlist.m3u8',
-    posterUrl: 'https://live6.brownrice.com/cam-images/communityinktahoesouth.jpg',
+    category: 'traffic',
+    priority: 'high',
     health: 'live',
-    coordinates: { lat: 38.9447, lng: -119.9774, estimated: true },
+    coordinates: { lat: 39.3275, lng: -120.1865, estimated: false },
+    feed: {
+      kind: 'hls',
+      playlistUrl: 'https://wzmedia.dot.ca.gov/D3/89_West_River_St_PLA89_NB.stream/playlist.m3u8',
+      posterUrl:
+        'https://cwwp2.dot.ca.gov/data/d3/cctv/image/hwy89atwestriver/hwy89atwestriver.jpg',
+    },
+    source: {
+      provider: 'caltrans',
+      pageUrl: 'https://cwwp2.dot.ca.gov/vm/loc/d3/hwy89atwestriver.htm',
+      extractor: 'caltrans-loc-page',
+    },
   },
   {
-    id: 'welhomeshop1',
-    name: 'Tahoe Keys Blvd',
-    area: 'South Lake Tahoe',
-    region: 'south-lake',
-    sourcePage: 'https://tahoeweathercam.com/hwy50keysblvd.html',
-    streamUrl:
-      'https://live4.brownrice.com:444/welhomeshop1/welhomeshop1.stream/main_playlist.m3u8',
-    posterUrl: 'https://live4.brownrice.com/cam-images/welhomeshop1.jpg',
-    health: 'live',
-    coordinates: { lat: 38.9422, lng: -119.9791, estimated: true },
-  },
-  {
-    id: 'idlehour1',
-    name: 'Lake Tahoe View',
-    area: 'South Lake Tahoe',
-    region: 'south-lake',
-    sourcePage: 'https://tahoeweathercam.com/idlehour-slaketahoe.html',
-    streamUrl:
-      'https://streamer2.brownrice.com/idlehour1/idlehour1.stream/playlist.m3u8',
-    posterUrl: 'https://live1.brownrice.com/cam-images/idlehour1.jpg',
-    health: 'offline',
-    coordinates: { lat: 38.9388, lng: -119.9704, estimated: true },
-  },
-  {
-    id: 'communityinklaketahoehwy50',
-    name: 'Loyalton',
-    area: 'Loyalton',
+    id: 'caltrans_89_palisades_entrance',
+    name: 'Palisades Tahoe Entrance',
+    area: 'Olympic Valley',
     region: 'other',
-    sourcePage: 'https://tahoeweathercam.com/loyalton.html',
-    streamUrl:
-      'https://streamer5.brownrice.com/communityinklaketahoehwy50/communityinklaketahoehwy50.stream/main_playlist.m3u8',
-    posterUrl: 'https://live4.brownrice.com/cam-images/communityinklaketahoehwy50.jpg',
-    health: 'offline',
-    coordinates: { lat: 39.6704, lng: -120.2418, estimated: true },
+    category: 'traffic',
+    priority: 'critical',
+    health: 'live',
+    coordinates: { lat: 39.1969, lng: -120.2367, estimated: false },
+    feed: {
+      kind: 'hls',
+      playlistUrl:
+        'https://wzmedia.dot.ca.gov/D3/89_Olympic_Valley_Rd_PLA89_NB.stream/playlist.m3u8',
+      posterUrl:
+        'https://cwwp2.dot.ca.gov/data/d3/cctv/image/hwy89atolympicvalley/hwy89atolympicvalley.jpg',
+    },
+    source: {
+      provider: 'caltrans',
+      pageUrl: 'https://cwwp2.dot.ca.gov/vm/loc/d3/hwy89atolympicvalley.htm',
+      extractor: 'caltrans-loc-page',
+    },
   },
   {
-    id: 'communityinkgenoa',
-    name: 'Genoa',
-    area: 'Carson Valley',
+    id: 'caltrans_89_28_wye',
+    name: 'Tahoe City Wye',
+    area: 'Tahoe City',
     region: 'other',
-    sourcePage: 'https://tahoeweathercam.com/genoa.html',
-    streamUrl:
-      'https://live6.brownrice.com:444/communityinkgenoa/communityinkgenoa.stream/playlist.m3u8',
-    posterUrl: 'https://live6.brownrice.com/cam-images/communityinkgenoa.jpg',
-    health: 'live',
-    coordinates: { lat: 39.0055, lng: -119.8468, estimated: true },
+    category: 'traffic',
+    priority: 'high',
+    health: 'unverified',
+    coordinates: { lat: 39.1706, lng: -120.1442, estimated: false },
+    feed: {
+      kind: 'snapshot',
+      imageUrl:
+        'https://cwwp2.dot.ca.gov/data/d3/cctv/image/hwy89athwy28/hwy89athwy28.jpg',
+      refreshSeconds: 45,
+    },
+    source: {
+      provider: 'caltrans',
+      pageUrl: 'https://cwwp2.dot.ca.gov/vm/loc/d3/hwy89athwy28.htm',
+      extractor: 'caltrans-loc-page',
+      notes: 'Playlist URL currently returns 403; using snapshot fallback.',
+    },
   },
   {
-    id: 'communityinkskirunblvd',
-    name: 'Ski Run Center',
-    area: 'South Lake Tahoe',
-    region: 'south-lake',
-    sourcePage: 'https://tahoeweathercam.com/skiruncenter.html',
-    streamUrl:
-      'https://live6.brownrice.com:444/communityinkskirunblvd/communityinkskirunblvd.stream/main_playlist.m3u8',
-    posterUrl: 'https://live6.brownrice.com/cam-images/communityinkskirunblvd.jpg',
-    health: 'live',
-    coordinates: { lat: 38.944, lng: -119.9654, estimated: true },
-  },
-  {
-    id: 'communityinkvillager1',
-    name: 'Villager Nursery',
+    id: 'caltrans_267_northstar',
+    name: 'Hwy 267 at Northstar Dr',
     area: 'Truckee',
     region: 'truckee',
-    sourcePage: 'https://tahoeweathercam.com/villagernursery.html',
-    streamUrl:
-      'https://live5.brownrice.com:444/communityinkvillager1/communityinkvillager1.stream/main_playlist.m3u8',
-    posterUrl: 'https://live5.brownrice.com/cam-images/communityinkvillager1.jpg',
+    category: 'traffic',
+    priority: 'critical',
     health: 'live',
-    coordinates: { lat: 39.3265691, lng: -120.1954651, estimated: false },
+    coordinates: { lat: 39.2934, lng: -120.1147, estimated: false },
+    feed: {
+      kind: 'hls',
+      playlistUrl: 'https://wzmedia.dot.ca.gov/D3/267_Northstar_PLA267_WB.stream/playlist.m3u8',
+      posterUrl:
+        'https://cwwp2.dot.ca.gov/data/d3/cctv/image/hwy267atnorthstar/hwy267atnorthstar.jpg',
+    },
+    source: {
+      provider: 'caltrans',
+      pageUrl: 'https://cwwp2.dot.ca.gov/vm/loc/d3/hwy267atnorthstar.htm',
+      extractor: 'caltrans-loc-page',
+    },
+  },
+  {
+    id: 'caltrans_267_brockway',
+    name: 'Brockway Summit',
+    area: 'Hwy 267',
+    region: 'other',
+    category: 'traffic',
+    priority: 'high',
+    health: 'live',
+    coordinates: { lat: 39.2635, lng: -120.0762, estimated: false },
+    feed: {
+      kind: 'hls',
+      playlistUrl:
+        'https://wzmedia.dot.ca.gov/D3/267_Brockway_Summit_PLA267_EB.stream/playlist.m3u8',
+      posterUrl:
+        'https://cwwp2.dot.ca.gov/data/d3/cctv/image/hwy267atbrockwaysummit/hwy267atbrockwaysummit.jpg',
+    },
+    source: {
+      provider: 'caltrans',
+      pageUrl: 'https://cwwp2.dot.ca.gov/vm/loc/d3/hwy267atbrockwaysummit.htm',
+      extractor: 'caltrans-loc-page',
+    },
+  },
+  {
+    id: 'palisades_base_6200',
+    name: 'Palisades Base Area (Mountain Run)',
+    area: 'Palisades Tahoe',
+    region: 'other',
+    category: 'resort',
+    priority: 'high',
+    health: 'live',
+    coordinates: { lat: 39.197, lng: -120.2355, estimated: false },
+    feed: {
+      kind: 'iframe',
+      embedUrl: 'https://relay.ozolio.com/pub.api?cmd=embed&oid=EMB_ZIGI00000147',
+    },
+    source: {
+      provider: 'ozolio',
+      pageUrl: 'https://www.palisadestahoe.com/mountain-information/webcams',
+      extractor: 'ozolio-embed-oid',
+    },
+  },
+  {
+    id: 'palisades_gold_coast',
+    name: 'Palisades Gold Coast',
+    area: 'Palisades Tahoe',
+    region: 'other',
+    category: 'resort',
+    priority: 'high',
+    health: 'live',
+    coordinates: { lat: 39.1895, lng: -120.245, estimated: false },
+    feed: {
+      kind: 'iframe',
+      embedUrl: 'https://relay.ozolio.com/pub.api?cmd=embed&oid=EMB_EIFC0000015B',
+    },
+    source: {
+      provider: 'ozolio',
+      pageUrl: 'https://www.palisadestahoe.com/mountain-information/webcams',
+      extractor: 'ozolio-embed-oid',
+      notes: 'Mapped to Palisades Scope 8200 camera block.',
+    },
+  },
+  {
+    id: 'palisades_siberia',
+    name: 'Palisades Siberia',
+    area: 'Palisades Tahoe',
+    region: 'other',
+    category: 'resort',
+    priority: 'high',
+    health: 'live',
+    coordinates: { lat: 39.1845, lng: -120.252, estimated: false },
+    feed: {
+      kind: 'iframe',
+      embedUrl: 'https://relay.ozolio.com/pub.api?cmd=embed&oid=EMB_OBCE00000ECB',
+    },
+    source: {
+      provider: 'ozolio',
+      pageUrl: 'https://www.palisadestahoe.com/mountain-information/webcams',
+      extractor: 'ozolio-embed-oid',
+    },
+  },
+  {
+    id: 'sugarbowl_judah_lodge',
+    name: 'Sugar Bowl Judah Lodge',
+    area: 'Sugar Bowl',
+    region: 'other',
+    category: 'resort',
+    priority: 'normal',
+    health: 'unverified',
+    coordinates: { lat: 39.3082, lng: -120.3475, estimated: false },
+    feed: {
+      kind: 'iframe',
+      embedUrl: 'https://www.sugarbowl.com/webcams',
+    },
+    source: {
+      provider: 'sugarbowl',
+      pageUrl: 'https://www.sugarbowl.com/webcams',
+      extractor: 'resort-webcams-page',
+      notes: 'Sugar Bowl currently exposes rotating webcam snapshots on this page.',
+    },
+  },
+  {
+    id: 'sugarbowl_mt_disney',
+    name: 'Sugar Bowl Mt. Disney',
+    area: 'Sugar Bowl',
+    region: 'other',
+    category: 'resort',
+    priority: 'normal',
+    health: 'unverified',
+    coordinates: { lat: 39.3035, lng: -120.342, estimated: false },
+    feed: {
+      kind: 'iframe',
+      embedUrl: 'https://www.sugarbowl.com/webcams',
+    },
+    source: {
+      provider: 'sugarbowl',
+      pageUrl: 'https://www.sugarbowl.com/webcams',
+      extractor: 'resort-webcams-page',
+      notes: 'Mapped to Sugar Bowl webcam page where Mt. Disney image updates.',
+    },
+  },
+  {
+    id: 'northstar_pluto',
+    name: 'Northstar Mt. Pluto Summit',
+    area: 'Northstar',
+    region: 'other',
+    category: 'resort',
+    priority: 'high',
+    health: 'live',
+    coordinates: { lat: 39.2565, lng: -120.134, estimated: false },
+    feed: {
+      kind: 'hls',
+      playlistUrl:
+        'https://live9.brownrice.com:444/northstarspluto/northstarspluto.stream/main_playlist.m3u8',
+      posterUrl: 'https://live9.brownrice.com/cam-images/northstarspluto.jpg',
+    },
+    source: {
+      provider: 'brownrice',
+      pageUrl:
+        'https://www.northstarcalifornia.com/the-mountain/mountain-conditions/mountain-cams.aspx',
+      extractor: 'brownrice-embed',
+    },
+  },
+  {
+    id: 'northstar_village_midmountain',
+    name: 'Northstar Village Skating Rink',
+    area: 'Northstar',
+    region: 'other',
+    category: 'resort',
+    priority: 'normal',
+    health: 'live',
+    coordinates: { lat: 39.275, lng: -120.1215, estimated: false },
+    feed: {
+      kind: 'hls',
+      playlistUrl:
+        'https://live9.brownrice.com:444/northstarmidmountain/northstarmidmountain.stream/main_playlist.m3u8',
+      posterUrl: 'https://live9.brownrice.com/cam-images/northstarmidmountain.jpg',
+    },
+    source: {
+      provider: 'brownrice',
+      pageUrl:
+        'https://www.northstarcalifornia.com/the-mountain/mountain-conditions/mountain-cams.aspx',
+      extractor: 'brownrice-embed',
+      notes:
+        'Northstar currently exposes Mid-mountain as the closest public feed for village/skating visibility.',
+    },
+  },
+  {
+    id: 'tahoedonner_downhill',
+    name: 'Tahoe Donner Downhill Ski Resort',
+    area: 'Tahoe Donner',
+    region: 'truckee',
+    category: 'resort',
+    priority: 'normal',
+    health: 'live',
+    coordinates: { lat: 39.344, lng: -120.263, estimated: false },
+    feed: {
+      kind: 'iframe',
+      embedUrl: 'https://portal.hdontap.com/s/embed/?stream=tahoe-donner-downhill180_ttv-CUST&ratio=16:9',
+      posterUrl: 'https://portal.hdontap.com/snapshot/tahoedonner-180-test-CUST',
+    },
+    source: {
+      provider: 'hdontap',
+      pageUrl: 'https://www.tahoedonner.com/community/webcams/',
+      extractor: 'hdontap-embed',
+    },
+  },
+  {
+    id: 'tahoedonner_cross_country',
+    name: 'Tahoe Donner Cross Country Center',
+    area: 'Tahoe Donner',
+    region: 'truckee',
+    category: 'resort',
+    priority: 'normal',
+    health: 'live',
+    coordinates: { lat: 39.3585, lng: -120.2315, estimated: false },
+    feed: {
+      kind: 'iframe',
+      embedUrl: 'https://portal.hdontap.com/s/embed/?stream=Tahoe-Donner-180-2_ttv-CUST&ratio=16:9',
+      posterUrl: 'https://portal.hdontap.com/snapshot/tahoedonner-180-test-CUST',
+    },
+    source: {
+      provider: 'hdontap',
+      pageUrl: 'https://www.tahoedonner.com/community/webcams/',
+      extractor: 'hdontap-embed',
+    },
+  },
+  {
+    id: 'tahoetopia_airport',
+    name: 'Truckee Tahoe Airport',
+    area: 'Truckee',
+    region: 'truckee',
+    category: 'scenic',
+    priority: 'high',
+    health: 'live',
+    coordinates: { lat: 39.32, lng: -120.1395, estimated: false },
+    feed: {
+      kind: 'iframe',
+      embedUrl: 'https://portal.hdontap.com/s/embed?stream=ktrk_abr_ttv-TOPIA&ratio=16:9',
+      posterUrl:
+        'https://portal.hdontap.com/snapshot/smil:ktrk_abr_ttv.smil-TOPIA?overlay=no&position=ll&size=640x360&overlay_image=false&padx=10&pady=10',
+    },
+    source: {
+      provider: 'hdontap',
+      pageUrl: 'https://tahoetopia.com/webcam/truckee-tahoe-airport-cam',
+      extractor: 'hdontap-page-iframe',
+    },
+  },
+  {
+    id: 'tahoetopia_donner_lake_village',
+    name: 'Donner Lake Village',
+    area: 'Donner Lake',
+    region: 'truckee',
+    category: 'scenic',
+    priority: 'high',
+    health: 'live',
+    coordinates: { lat: 39.3245, lng: -120.2655, estimated: false },
+    feed: {
+      kind: 'iframe',
+      embedUrl: 'https://portal.hdontap.com/s/embed?stream=dlvr_svl-TOPIA&ratio=16:9',
+      posterUrl:
+        'https://portal.hdontap.com/snapshot/dlvr_svl-TOPIA?overlay=yes&position=ul&size=700x393&overlay_image=upload_9ea986235016f4e0143dc605a9550813.png&padx=10&pady=10',
+    },
+    source: {
+      provider: 'hdontap',
+      pageUrl: 'https://tahoetopia.com/webcam/donner-lake-village-resort',
+      extractor: 'hdontap-page-iframe',
+    },
+  },
+  {
+    id: 'tahoetopia_downtown_truckee',
+    name: 'Downtown Truckee (Tahoetopia)',
+    area: 'Truckee',
+    region: 'truckee',
+    category: 'scenic',
+    priority: 'high',
+    health: 'live',
+    coordinates: { lat: 39.3275, lng: -120.187, estimated: false },
+    feed: {
+      kind: 'iframe',
+      embedUrl: 'https://portal.hdontap.com/s/embed?stream=truckee_ttv-TOPIA-B&ratio=16:9&fluid=true',
+      posterUrl:
+        'https://portal.hdontap.com/snapshot/truckee_ttv-TOPIA?overlay=yes&position=ul&size=640x360&overlay_image=upload_4396379a338c77dd4ff630f844e15695.png&padx=10&pady=10',
+    },
+    source: {
+      provider: 'hdontap',
+      pageUrl: 'https://tahoetopia.com/webcam/downtown-truckee',
+      extractor: 'hdontap-page-iframe',
+    },
   },
 ]
