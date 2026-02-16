@@ -6,7 +6,7 @@ import { CameraTile } from './components/CameraTile'
 import {
   areaFilterLabelMap,
   cameras,
-  getCameraSearchHaystack,
+  getCameraSearchMatchRank,
   getCameraStatusSortRank,
   getCameraTagGroups,
   getCameraTagLabel,
@@ -177,8 +177,7 @@ function App() {
         return true
       }
 
-      const haystack = getCameraSearchHaystack(camera)
-      return haystack.includes(query)
+      return getCameraSearchMatchRank(camera, query) < 99
     })
   }, [searchText, tagFilteredCameras])
 
@@ -195,7 +194,17 @@ function App() {
   }, [tagFilteredCameras])
 
   const sortedCameras = useMemo(() => {
+    const query = searchText.trim().toLowerCase()
+
     return [...filteredCameras].sort((left, right) => {
+      if (query) {
+        const leftSearchRank = getCameraSearchMatchRank(left, query)
+        const rightSearchRank = getCameraSearchMatchRank(right, query)
+        if (leftSearchRank !== rightSearchRank) {
+          return leftSearchRank - rightSearchRank
+        }
+      }
+
       if (sortByStatus) {
         const leftRank = getCameraStatusSortRank(left, streamControllerState.runtimeById)
         const rightRank = getCameraStatusSortRank(right, streamControllerState.runtimeById)
@@ -211,7 +220,7 @@ function App() {
 
       return left.name.localeCompare(right.name)
     })
-  }, [filteredCameras, sortByStatus, streamControllerState.runtimeById])
+  }, [filteredCameras, searchText, sortByStatus, streamControllerState.runtimeById])
 
   const cameraStats = useMemo(() => {
     return cameras.reduce(

@@ -556,17 +556,19 @@ export const cameras: Camera[] = [
     category: 'resort',
     priority: 'normal',
     tags: ['tahoe_donner', 'base_area'],
-    health: 'live',
+    health: 'unverified',
     coordinates: { lat: 39.344, lng: -120.263, estimated: false },
     feed: {
-      kind: 'iframe',
-      embedUrl: 'https://portal.hdontap.com/s/embed/?stream=tahoe-donner-downhill180_ttv-CUST&ratio=16:9',
-      posterUrl: 'https://portal.hdontap.com/snapshot/tahoedonner-180-test-CUST',
+      kind: 'snapshot',
+      imageUrl: 'https://www.tahoedonner.com/wp-content/uploads/2018/11/DHWebcam.jpg',
+      refreshSeconds: 60,
     },
     source: {
       provider: 'hdontap',
       pageUrl: 'https://www.tahoedonner.com/community/webcams/',
-      extractor: 'hdontap-embed',
+      extractor: 'hdontap-embed-fallback',
+      notes:
+        'HDOnTap embeds are blocked on non-allowlisted domains by frame-ancestors CSP; using snapshot fallback.',
     },
   },
   {
@@ -577,17 +579,19 @@ export const cameras: Camera[] = [
     category: 'resort',
     priority: 'normal',
     tags: ['tahoe_donner'],
-    health: 'live',
+    health: 'unverified',
     coordinates: { lat: 39.3585, lng: -120.2315, estimated: false },
     feed: {
-      kind: 'iframe',
-      embedUrl: 'https://portal.hdontap.com/s/embed/?stream=Tahoe-Donner-180-2_ttv-CUST&ratio=16:9',
-      posterUrl: 'https://portal.hdontap.com/snapshot/tahoedonner-180-test-CUST',
+      kind: 'snapshot',
+      imageUrl: 'https://www.tahoedonner.com/wp-content/uploads/2018/05/MarinaWebcam.jpg',
+      refreshSeconds: 60,
     },
     source: {
       provider: 'hdontap',
       pageUrl: 'https://www.tahoedonner.com/community/webcams/',
-      extractor: 'hdontap-embed',
+      extractor: 'hdontap-embed-fallback',
+      notes:
+        'HDOnTap embeds are blocked on non-allowlisted domains by frame-ancestors CSP; using snapshot fallback.',
     },
   },
   {
@@ -601,15 +605,17 @@ export const cameras: Camera[] = [
     health: 'live',
     coordinates: { lat: 39.32, lng: -120.1395, estimated: false },
     feed: {
-      kind: 'iframe',
-      embedUrl: 'https://portal.hdontap.com/s/embed?stream=ktrk_abr_ttv-TOPIA&ratio=16:9',
-      posterUrl:
+      kind: 'snapshot',
+      imageUrl:
         'https://portal.hdontap.com/snapshot/smil:ktrk_abr_ttv.smil-TOPIA?overlay=no&position=ll&size=640x360&overlay_image=false&padx=10&pady=10',
+      refreshSeconds: 45,
     },
     source: {
       provider: 'hdontap',
       pageUrl: 'https://tahoetopia.com/webcam/truckee-tahoe-airport-cam',
-      extractor: 'hdontap-page-iframe',
+      extractor: 'hdontap-snapshot-fallback',
+      notes:
+        'HDOnTap embeds are blocked on non-allowlisted domains by frame-ancestors CSP; using snapshot endpoint.',
     },
   },
   {
@@ -623,15 +629,17 @@ export const cameras: Camera[] = [
     health: 'live',
     coordinates: { lat: 39.3245, lng: -120.2655, estimated: false },
     feed: {
-      kind: 'iframe',
-      embedUrl: 'https://portal.hdontap.com/s/embed?stream=dlvr_svl-TOPIA&ratio=16:9',
-      posterUrl:
+      kind: 'snapshot',
+      imageUrl:
         'https://portal.hdontap.com/snapshot/dlvr_svl-TOPIA?overlay=yes&position=ul&size=700x393&overlay_image=upload_9ea986235016f4e0143dc605a9550813.png&padx=10&pady=10',
+      refreshSeconds: 45,
     },
     source: {
       provider: 'hdontap',
       pageUrl: 'https://tahoetopia.com/webcam/donner-lake-village-resort',
-      extractor: 'hdontap-page-iframe',
+      extractor: 'hdontap-snapshot-fallback',
+      notes:
+        'HDOnTap embeds are blocked on non-allowlisted domains by frame-ancestors CSP; using snapshot endpoint.',
     },
   },
   {
@@ -645,15 +653,17 @@ export const cameras: Camera[] = [
     health: 'live',
     coordinates: { lat: 39.3275, lng: -120.187, estimated: false },
     feed: {
-      kind: 'iframe',
-      embedUrl: 'https://portal.hdontap.com/s/embed?stream=truckee_ttv-TOPIA-B&ratio=16:9&fluid=true',
-      posterUrl:
+      kind: 'snapshot',
+      imageUrl:
         'https://portal.hdontap.com/snapshot/truckee_ttv-TOPIA?overlay=yes&position=ul&size=640x360&overlay_image=upload_4396379a338c77dd4ff630f844e15695.png&padx=10&pady=10',
+      refreshSeconds: 45,
     },
     source: {
       provider: 'hdontap',
       pageUrl: 'https://tahoetopia.com/webcam/downtown-truckee',
-      extractor: 'hdontap-page-iframe',
+      extractor: 'hdontap-snapshot-fallback',
+      notes:
+        'HDOnTap embeds are blocked on non-allowlisted domains by frame-ancestors CSP; using snapshot endpoint.',
     },
   },
 ]

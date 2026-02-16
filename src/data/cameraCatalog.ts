@@ -158,6 +158,55 @@ export function getCameraSearchHaystack(camera: Camera) {
   return `${camera.name} ${camera.area} ${tagText}`.toLowerCase()
 }
 
+export function getCameraSearchMatchRank(camera: Camera, query: string) {
+  const normalizedQuery = query.trim().toLowerCase()
+  if (!normalizedQuery) {
+    return 0
+  }
+
+  const cameraName = camera.name.toLowerCase()
+  const areaName = camera.area.toLowerCase()
+  const tagLabels = getCameraFilterTags(camera).map((tag) => getCameraTagLabel(tag).toLowerCase())
+
+  if (cameraName === normalizedQuery) {
+    return 0
+  }
+
+  if (cameraName.startsWith(normalizedQuery)) {
+    return 1
+  }
+
+  if (cameraName.includes(normalizedQuery)) {
+    return 2
+  }
+
+  if (areaName === normalizedQuery) {
+    return 3
+  }
+
+  if (areaName.startsWith(normalizedQuery)) {
+    return 4
+  }
+
+  if (areaName.includes(normalizedQuery)) {
+    return 5
+  }
+
+  if (tagLabels.some((tagLabel) => tagLabel === normalizedQuery)) {
+    return 6
+  }
+
+  if (tagLabels.some((tagLabel) => tagLabel.startsWith(normalizedQuery))) {
+    return 7
+  }
+
+  if (tagLabels.some((tagLabel) => tagLabel.includes(normalizedQuery))) {
+    return 8
+  }
+
+  return 99
+}
+
 export function isWorkingCamera(camera: Camera) {
   return camera.health === 'live'
 }
