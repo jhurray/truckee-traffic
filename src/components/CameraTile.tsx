@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type Hls from 'hls.js'
 import type { Camera } from '../data/cameras'
-
-type StreamState = 'idle' | 'loading' | 'ready' | 'error'
+import type { StreamRuntimeStatus } from '../types/stream'
 
 type CameraTileProps = {
   camera: Camera
+  isStreaming: boolean
+  runtimeStatus: StreamRuntimeStatus
+  onToggleStreaming: (cameraId: string) => void
+  onRuntimeStatusChange: (cameraId: string, status: StreamRuntimeStatus) => void
 }
 
 const healthStyleMap: Record<Camera['health'], string> = {
@@ -20,28 +23,36 @@ const healthLabelMap: Record<Camera['health'], string> = {
   unverified: 'Not checked',
 }
 
-export function CameraTile({ camera }: CameraTileProps) {
-  const [isStreaming, setIsStreaming] = useState(false)
+export function CameraTile({
+  camera,
+  isStreaming,
+  runtimeStatus,
+  onToggleStreaming,
+  onRuntimeStatusChange,
+}: CameraTileProps) {
   const [isMuted, setIsMuted] = useState(true)
-  const [streamState, setStreamState] = useState<StreamState>('idle')
   const videoRef = useRef<HTMLVideoElement>(null)
   const hlsRef = useRef<Hls | null>(null)
 
   const statusLabel = useMemo(() => {
-    if (streamState === 'loading') {
+    if (!isStreaming) {
+      return 'Paused'
+    }
+
+    if (runtimeStatus === 'loading' || runtimeStatus === 'idle') {
       return 'Connecting...'
     }
 
-    if (streamState === 'error') {
+    if (runtimeStatus === 'error') {
       return 'Unable to play stream'
     }
 
-    if (streamState === 'ready') {
+    if (runtimeStatus === 'ready') {
       return 'Playing'
     }
 
     return 'Paused'
-  }, [streamState])
+  }, [isStreaming, runtimeStatus])
 
   useEffect(() => {
     const video = videoRef.current
@@ -58,20 +69,22 @@ export function CameraTile({ camera }: CameraTileProps) {
       video.pause()
       video.removeAttribute('src')
       video.load()
+      onRuntimeStatusChange(camera.id, 'idle')
       return
     }
 
     const handleCanPlay = () => {
-      setStreamState('ready')
+      onRuntimeStatusChange(camera.id, 'ready')
       void video.play().catch(() => {
-        setStreamState('error')
+        onRuntimeStatusChange(camera.id, 'error')
       })
     }
 
     const handleFatalError = () => {
-      setStreamState('error')
+      onRuntimeStatusChange(camera.id, 'error')
     }
 
+    onRuntimeStatusChange(camera.id, 'loading')
     video.addEventListener('canplay', handleCanPlay, { once: true })
 
     let cancelled = false
@@ -119,21 +132,13 @@ export function CameraTile({ camera }: CameraTileProps) {
         hlsRef.current = null
       }
     }
-  }, [camera.streamUrl, isStreaming])
+  }, [camera.id, camera.streamUrl, isStreaming, onRuntimeStatusChange])
 
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.muted = isMuted
     }
   }, [isMuted])
-
-  const handleToggleStream = () => {
-    setIsStreaming((current) => {
-      const next = !current
-      setStreamState(next ? 'loading' : 'idle')
-      return next
-    })
-  }
 
   return (
     <article className="group overflow-hidden rounded-2xl border border-zinc-200 bg-white/90 shadow-sm backdrop-blur transition hover:border-zinc-300 hover:shadow-lg">
@@ -180,7 +185,7 @@ export function CameraTile({ camera }: CameraTileProps) {
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
-            onClick={handleToggleStream}
+            onClick={() => onToggleStreaming(camera.id)}
             className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-700"
           >
             {isStreaming ? 'Stop stream' : 'Start stream'}
