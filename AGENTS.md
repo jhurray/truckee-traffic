@@ -1,7 +1,7 @@
 # Agent Notes for truckee-traffic
 
 ## Purpose
-Truckee Traffic Cams is a Vite + React dashboard that streams public HLS traffic/weather cameras for the Tahoe/Truckee area. It provides three views: stream tiles, a Leaflet map, and a multi-stream monitor wall.
+Truckee Traffic Cams is a Vite + React dashboard that streams public traffic, resort, and local webcams for the Tahoe/Truckee area. It provides three views: stream tiles, a Leaflet map, and a multi-stream monitor wall.
 
 ## Local commands
 - `npm install`
@@ -36,7 +36,7 @@ Truckee Traffic Cams is a Vite + React dashboard that streams public HLS traffic
 - Playback uses native HLS on Safari and dynamically imports `hls.js` otherwise.
 - Always destroy `hls.js` instances on cleanup to avoid leaks.
 - Runtime status is tracked via `StreamRuntimeStatus` in `src/types/stream.ts` and should be kept in sync with playback events.
-- Current UI components assume HLS feeds; adding `iframe` or `snapshot` feeds requires updating the rendering logic.
+- UI supports `hls`, `iframe`, and `snapshot` feeds; keep behavior consistent across tile, lightbox, and monitor wall components when modifying playback code.
 
 ## Map behavior
 - Leaflet CSS is imported in `src/main.tsx`; do not remove it.

@@ -49,7 +49,6 @@ Current catalog includes:
 - Community cameras from TahoeWeatherCam-origin Brownrice feeds
 
 When you re-check streams, update `health` in `src/data/cameras.ts` and the footer date in `src/App.tsx`.
-UI components currently assume HLS feeds; adding `iframe` or `snapshot` feeds requires updating the rendering logic.
 
 ## Vercel deployment
 
