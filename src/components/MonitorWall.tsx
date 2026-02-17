@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import type Hls from 'hls.js'
 import type { Camera } from '../data/cameras'
 
 type MonitorWallProps = {
   cameras: Camera[]
   immersive?: boolean
+  onCameraSelect?: (camera: Camera) => void
 }
 
 type MonitorStatus = 'loading' | 'ready' | 'error'
@@ -63,11 +64,17 @@ function calculateBestLayout(
   return bestLayout
 }
 
-function MonitorFeedTile({ camera }: { camera: Camera }) {
+type MonitorFeedTileProps = {
+  camera: Camera
+  onCameraSelect?: (camera: Camera) => void
+}
+
+function MonitorFeedTile({ camera, onCameraSelect }: MonitorFeedTileProps) {
   const [status, setStatus] = useState<MonitorStatus>('loading')
   const [snapshotVersion, setSnapshotVersion] = useState(() => Date.now())
   const videoRef = useRef<HTMLVideoElement>(null)
   const hlsRef = useRef<Hls | null>(null)
+  const isSelectable = Boolean(onCameraSelect)
   const feed = camera.feed
   const hlsPlaylistUrl = feed.kind === 'hls' ? feed.playlistUrl : null
   const snapshotRefreshSeconds = feed.kind === 'snapshot' ? feed.refreshSeconds : null
@@ -179,8 +186,28 @@ function MonitorFeedTile({ camera }: { camera: Camera }) {
     }
   }, [feed.kind, hlsPlaylistUrl])
 
+  const handleSelect = () => {
+    onCameraSelect?.(camera)
+  }
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      handleSelect()
+    }
+  }
+
   return (
-    <article className="relative overflow-hidden rounded-lg border border-zinc-700 bg-black">
+    <article
+      className={`group relative overflow-hidden rounded-lg border border-zinc-700 bg-black ${
+        isSelectable ? 'cursor-zoom-in' : ''
+      }`}
+      onClick={isSelectable ? handleSelect : undefined}
+      onKeyDown={isSelectable ? handleKeyDown : undefined}
+      role={isSelectable ? 'button' : undefined}
+      tabIndex={isSelectable ? 0 : undefined}
+      aria-label={isSelectable ? `Open ${camera.name}` : undefined}
+    >
       {feed.kind === 'hls' ? (
         <video
           ref={videoRef}
@@ -193,7 +220,7 @@ function MonitorFeedTile({ camera }: { camera: Camera }) {
       ) : feed.kind === 'iframe' ? (
         <iframe
           src={feed.embedUrl}
-          className="h-full w-full"
+          className={`h-full w-full ${isSelectable ? 'pointer-events-none' : ''}`}
           allow="autoplay; fullscreen; picture-in-picture"
           allowFullScreen
           title={`${camera.name} stream`}
@@ -210,6 +237,11 @@ function MonitorFeedTile({ camera }: { camera: Camera }) {
           onError={() => setStatus('error')}
         />
       )}
+
+      {isSelectable ? (
+        <div className="pointer-events-none absolute inset-0 border border-cyan-300/0 transition group-hover:border-cyan-300/45 group-focus-visible:border-cyan-300/65" />
+      ) : null}
+
       <div className="absolute inset-x-0 top-0 bg-gradient-to-b from-black/70 to-transparent px-2 py-2">
         <div className="flex items-start justify-between gap-2">
           <div>
@@ -218,16 +250,23 @@ function MonitorFeedTile({ camera }: { camera: Camera }) {
             </p>
             <p className="text-xs font-semibold text-zinc-100">{camera.name}</p>
           </div>
-          <span className="rounded-full border border-zinc-500 bg-black/40 px-2 py-1 font-mono text-[10px] uppercase tracking-wide text-zinc-200">
-            {getMonitorStatusLabel(status)}
-          </span>
+          <div className="flex items-center gap-1.5">
+            {isSelectable ? (
+              <span className="rounded-full border border-cyan-300/35 bg-cyan-500/20 px-2 py-1 font-mono text-[10px] uppercase tracking-wide text-cyan-100">
+                Open
+              </span>
+            ) : null}
+            <span className="rounded-full border border-zinc-500 bg-black/40 px-2 py-1 font-mono text-[10px] uppercase tracking-wide text-zinc-200">
+              {getMonitorStatusLabel(status)}
+            </span>
+          </div>
         </div>
       </div>
     </article>
   )
 }
 
-export function MonitorWall({ cameras, immersive = false }: MonitorWallProps) {
+export function MonitorWall({ cameras, immersive = false, onCameraSelect }: MonitorWallProps) {
   const wallRef = useRef<HTMLElement>(null)
   const gridRef = useRef<HTMLDivElement>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
@@ -338,7 +377,7 @@ export function MonitorWall({ cameras, immersive = false }: MonitorWallProps) {
 
       <div ref={gridRef} className="grid min-h-0 h-[calc(100%-56px)]" style={tileStyle}>
         {cameras.map((camera) => (
-          <MonitorFeedTile key={camera.id} camera={camera} />
+          <MonitorFeedTile key={camera.id} camera={camera} onCameraSelect={onCameraSelect} />
         ))}
       </div>
     </section>

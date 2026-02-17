@@ -6,6 +6,7 @@ import type { StreamRuntimeStatus } from '../types/stream'
 type CameraLightboxProps = {
   camera: Camera
   onClose: () => void
+  variant?: 'default' | 'full-page'
 }
 
 function getStatusLabel(runtimeStatus: StreamRuntimeStatus) {
@@ -24,7 +25,7 @@ function getStatusLabel(runtimeStatus: StreamRuntimeStatus) {
   return 'Connecting...'
 }
 
-export function CameraLightbox({ camera, onClose }: CameraLightboxProps) {
+export function CameraLightbox({ camera, onClose, variant = 'default' }: CameraLightboxProps) {
   const [isMuted, setIsMuted] = useState(true)
   const [runtimeStatus, setRuntimeStatus] = useState<StreamRuntimeStatus>('loading')
   const [snapshotVersion, setSnapshotVersion] = useState(() => Date.now())
@@ -34,6 +35,7 @@ export function CameraLightbox({ camera, onClose }: CameraLightboxProps) {
   const canMute = feed.kind === 'hls'
   const hlsPlaylistUrl = feed.kind === 'hls' ? feed.playlistUrl : null
   const snapshotRefreshSeconds = feed.kind === 'snapshot' ? feed.refreshSeconds : null
+  const isFullPage = variant === 'full-page'
 
   const statusLabel = useMemo(() => getStatusLabel(runtimeStatus), [runtimeStatus])
   const snapshotStreamUrl = useMemo(() => {
@@ -153,12 +155,18 @@ export function CameraLightbox({ camera, onClose }: CameraLightboxProps) {
 
   return (
     <div
-      className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/75 px-4 py-6 backdrop-blur-sm"
+      className={`fixed inset-0 z-[1000] flex bg-black/80 ${
+        isFullPage ? 'items-stretch justify-stretch p-0' : 'items-center justify-center px-4 py-6 backdrop-blur-sm'
+      }`}
       onClick={onClose}
       role="presentation"
     >
       <div
-        className="w-full max-w-5xl overflow-hidden rounded-2xl border border-zinc-700 bg-zinc-950 shadow-2xl"
+        className={`w-full overflow-hidden bg-zinc-950 shadow-2xl ${
+          isFullPage
+            ? 'flex h-full max-w-none flex-col rounded-none border-0'
+            : 'max-w-5xl rounded-2xl border border-zinc-700'
+        }`}
         onClick={(event) => event.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -186,11 +194,11 @@ export function CameraLightbox({ camera, onClose }: CameraLightboxProps) {
           </div>
         </header>
 
-        <div className="relative aspect-video bg-black">
+        <div className={`relative bg-black ${isFullPage ? 'min-h-0 flex-1' : 'aspect-video'}`}>
           {feed.kind === 'hls' ? (
             <video
               ref={videoRef}
-              className="h-full w-full object-cover"
+              className={`h-full w-full ${isFullPage ? 'object-contain' : 'object-cover'}`}
               controls
               playsInline
               muted={isMuted}
@@ -211,7 +219,7 @@ export function CameraLightbox({ camera, onClose }: CameraLightboxProps) {
             <img
               src={snapshotStreamUrl}
               alt={`${camera.name} live snapshot`}
-              className="h-full w-full object-cover"
+              className={`h-full w-full ${isFullPage ? 'object-contain' : 'object-cover'}`}
               loading="eager"
               onLoad={() => setRuntimeStatus('ready')}
               onError={() => setRuntimeStatus('error')}

@@ -437,11 +437,24 @@ function App() {
               ) : null}
 
               <div className="min-h-0 min-w-0 flex-1">
-                <MonitorWall cameras={monitorCameras} immersive />
+                <MonitorWall
+                  cameras={monitorCameras}
+                  immersive
+                  onCameraSelect={handleOpenCameraLightbox}
+                />
               </div>
             </div>
           </div>
         </div>
+
+        {lightboxCamera ? (
+          <CameraLightbox
+            key={lightboxCamera.id}
+            camera={lightboxCamera}
+            onClose={handleCloseCameraLightbox}
+            variant="full-page"
+          />
+        ) : null}
       </main>
     )
   }
