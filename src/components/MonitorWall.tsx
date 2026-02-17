@@ -27,6 +27,18 @@ function getMonitorStatusLabel(status: MonitorStatus) {
   return 'Connecting'
 }
 
+function getMonitorStatusTone(status: MonitorStatus) {
+  if (status === 'ready') {
+    return 'border-cyan-400/35 bg-cyan-500/20 text-cyan-100'
+  }
+
+  if (status === 'error') {
+    return 'border-rose-400/45 bg-rose-500/20 text-rose-100'
+  }
+
+  return 'border-amber-300/50 bg-amber-500/20 text-amber-100'
+}
+
 function calculateBestLayout(
   cameraCount: number,
   containerWidth: number,
@@ -252,11 +264,13 @@ function MonitorFeedTile({ camera, onCameraSelect }: MonitorFeedTileProps) {
           </div>
           <div className="flex items-center gap-1.5">
             {isSelectable ? (
-              <span className="rounded-full border border-cyan-300/35 bg-cyan-500/20 px-2 py-1 font-mono text-[10px] uppercase tracking-wide text-cyan-100">
+            <span className="rounded-full border border-cyan-300/35 bg-cyan-500/20 px-2 py-1 font-mono text-[10px] uppercase tracking-wide text-cyan-100">
                 Open
               </span>
             ) : null}
-            <span className="rounded-full border border-zinc-500 bg-black/40 px-2 py-1 font-mono text-[10px] uppercase tracking-wide text-zinc-200">
+            <span
+              className={`rounded-full border px-2 py-1 font-mono text-[10px] uppercase tracking-wide ${getMonitorStatusTone(status)}`}
+            >
               {getMonitorStatusLabel(status)}
             </span>
           </div>

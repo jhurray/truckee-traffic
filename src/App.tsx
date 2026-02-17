@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useReducer, useState } from 'react'
+import { useCallback, useEffect, useMemo, useReducer, useState } from 'react'
 import { CameraLightbox } from './components/CameraLightbox'
 import { CameraMap } from './components/CameraMap'
 import { MonitorWall } from './components/MonitorWall'
@@ -32,6 +32,39 @@ type StreamControllerAction =
   | { type: 'toggle_one'; cameraId: string }
   | { type: 'set_many'; cameraIds: string[]; value: boolean }
   | { type: 'runtime_update'; cameraId: string; status: StreamRuntimeStatus }
+
+function isViewMode(value: string | null): value is ViewMode {
+  return value === 'streams' || value === 'map' || value === 'monitor' || value === 'highways'
+}
+
+function getViewModeFromLocation(): ViewMode {
+  if (typeof window === 'undefined') {
+    return 'streams'
+  }
+
+  const queryMode = new URLSearchParams(window.location.search).get('view')
+  if (isViewMode(queryMode)) {
+    return queryMode
+  }
+
+  const hashMode = window.location.hash.replace('#', '')
+  if (isViewMode(hashMode)) {
+    return hashMode
+  }
+
+  return 'streams'
+}
+
+function buildViewModeUrl(viewMode: ViewMode): string {
+  if (typeof window === 'undefined') {
+    return viewMode === 'monitor' ? '#monitor' : '/'
+  }
+
+  const url = new URL(window.location.href)
+  url.searchParams.delete('view')
+  url.hash = viewMode === 'streams' ? '' : `#${viewMode}`
+  return url.toString()
+}
 
 function createInitialStreamControllerState(): StreamControllerState {
   const activeById = Object.fromEntries(
@@ -93,7 +126,7 @@ function streamControllerReducer(
 }
 
 function App() {
-  const [viewMode, setViewMode] = useState<ViewMode>('streams')
+  const [viewMode, setViewMode] = useState<ViewMode>(() => getViewModeFromLocation())
   const [searchText, setSearchText] = useState('')
   const [areaFilter, setAreaFilter] = useState<AreaFilter>('all')
   const [selectedTags, setSelectedTags] = useState<CameraTag[]>([])
@@ -118,6 +151,28 @@ function App() {
     },
     [],
   )
+
+  useEffect(() => {
+    const syncViewModeFromLocation = () => {
+      setViewMode(getViewModeFromLocation())
+    }
+
+    syncViewModeFromLocation()
+    window.addEventListener('hashchange', syncViewModeFromLocation)
+    window.addEventListener('popstate', syncViewModeFromLocation)
+
+    return () => {
+      window.removeEventListener('hashchange', syncViewModeFromLocation)
+      window.removeEventListener('popstate', syncViewModeFromLocation)
+    }
+  }, [])
+
+  useEffect(() => {
+    const nextUrl = buildViewModeUrl(viewMode)
+    if (window.location.href !== nextUrl) {
+      window.history.replaceState({}, '', nextUrl)
+    }
+  }, [viewMode])
 
   const handleOpenCameraLightbox = useCallback((camera: Camera) => {
     setLightboxCamera(camera)
@@ -299,6 +354,12 @@ function App() {
                     >
                       Highways
                     </button>
+                    <a
+                      href={buildViewModeUrl('monitor')}
+                      className="rounded-full border border-cyan-400/40 bg-cyan-500/15 px-3 py-1 font-mono text-[11px] font-semibold uppercase tracking-wide text-cyan-100 transition hover:border-cyan-200 hover:bg-cyan-500/25"
+                    >
+                      Share monitor link
+                    </a>
                     <span className="rounded-full border border-cyan-400/40 bg-cyan-500/15 px-3 py-1 font-mono text-xs font-semibold uppercase tracking-wide text-cyan-200">
                       live wall: {monitorCameras.length}
                     </span>
