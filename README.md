@@ -7,6 +7,7 @@ Multi-camera dashboard for Tahoe/Truckee traffic, resort, and local weather/scen
 - Map view with Leaflet markers and lightbox playback.
 - Monitor wall that streams all working cameras with fullscreen support.
 - Multi-provider feed support: `hls`, `iframe`, and `snapshot`.
+- Live Caltrans highway conditions panel for I-80 and US-50 closures/restrictions.
 - Area filters (`All`, `Truckee`, `South Lake`) and status-priority sorting.
 - Multi-tag filtering with AND/OR matching across Streams, Map, and Monitor.
 

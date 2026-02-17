@@ -3,6 +3,7 @@ import { CameraLightbox } from './components/CameraLightbox'
 import { CameraMap } from './components/CameraMap'
 import { MonitorWall } from './components/MonitorWall'
 import { CameraTile } from './components/CameraTile'
+import { HighwayConditionsPanel } from './components/HighwayConditionsPanel'
 import {
   areaFilterLabelMap,
   cameras,
@@ -20,7 +21,7 @@ import type { Camera } from './data/cameraModel'
 import type { CameraTag } from './data/cameraTags'
 import type { StreamRuntimeStatus } from './types/stream'
 
-type ViewMode = 'streams' | 'map' | 'monitor'
+type ViewMode = 'streams' | 'map' | 'monitor' | 'highways'
 
 type StreamControllerState = {
   activeById: Record<string, boolean>
@@ -291,6 +292,13 @@ function App() {
                     >
                       Map
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('highways')}
+                      className="rounded-full border border-zinc-600 bg-zinc-900 px-4 py-2 text-sm font-medium text-zinc-200 transition hover:border-zinc-400 hover:text-white"
+                    >
+                      Highways
+                    </button>
                     <span className="rounded-full border border-cyan-400/40 bg-cyan-500/15 px-3 py-1 font-mono text-xs font-semibold uppercase tracking-wide text-cyan-200">
                       live wall: {monitorCameras.length}
                     </span>
@@ -522,181 +530,202 @@ function App() {
             >
               Monitor
             </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('highways')}
+              className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                viewMode === 'highways'
+                  ? 'bg-zinc-900 text-white'
+                  : 'border border-zinc-300 bg-white text-zinc-700 hover:border-zinc-500 hover:text-zinc-900'
+              }`}
+            >
+              Highways
+            </button>
           </div>
 
-          <div className="mb-4 flex flex-wrap gap-2">
-            {(Object.keys(areaFilterLabelMap) as AreaFilter[]).map((filterOption) => (
-              <button
-                key={filterOption}
-                type="button"
-                onClick={() => setAreaFilter(filterOption)}
-                className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                  areaFilter === filterOption
-                    ? 'bg-zinc-900 text-white'
-                    : 'border border-zinc-300 bg-white text-zinc-700 hover:border-zinc-500 hover:text-zinc-900'
-                }`}
-              >
-                {areaFilterLabelMap[filterOption]}
-              </button>
-            ))}
-          </div>
-
-          <div className="mb-4 rounded-2xl border border-zinc-200 bg-white/80 p-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-zinc-500">
-                Tag filters
-              </p>
-              <span className="rounded-full bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-600">
-                {selectedTags.length} selected
-              </span>
-              <button
-                type="button"
-                onClick={() => setIsTagBrowserOpen((current) => !current)}
-                className="rounded-full border border-zinc-300 px-3 py-1 text-xs font-medium text-zinc-600 transition hover:border-zinc-500 hover:text-zinc-900"
-              >
-                {isTagBrowserOpen ? 'Hide tag list' : 'Browse tags'}
-              </button>
-              {selectedTags.length > 0 ? (
-                <button
-                  type="button"
-                  onClick={handleClearTags}
-                  className="rounded-full border border-zinc-300 px-3 py-1 text-xs font-medium text-zinc-600 transition hover:border-zinc-500 hover:text-zinc-900"
-                >
-                  Clear tags
-                </button>
-              ) : null}
-            </div>
-
-            {selectedTags.length > 0 ? (
-              <div className="mt-3 flex flex-wrap gap-2">
-                {selectedTags.map((tag) => (
+          {viewMode === 'highways' ? (
+            <p className="text-xs text-zinc-500">
+              Real-time Caltrans closures and restrictions for I-80 and US-50.
+            </p>
+          ) : (
+            <>
+              <div className="mb-4 flex flex-wrap gap-2">
+                {(Object.keys(areaFilterLabelMap) as AreaFilter[]).map((filterOption) => (
                   <button
-                    key={tag}
+                    key={filterOption}
                     type="button"
-                    onClick={() => handleToggleTag(tag)}
-                    className="rounded-full border border-zinc-900 bg-zinc-900 px-3 py-1 text-xs font-medium text-white transition hover:bg-zinc-700"
+                    onClick={() => setAreaFilter(filterOption)}
+                    className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                      areaFilter === filterOption
+                        ? 'bg-zinc-900 text-white'
+                        : 'border border-zinc-300 bg-white text-zinc-700 hover:border-zinc-500 hover:text-zinc-900'
+                    }`}
                   >
-                    {getCameraTagLabel(tag)} ×
+                    {areaFilterLabelMap[filterOption]}
                   </button>
                 ))}
               </div>
-            ) : (
-              <p className="mt-2 text-xs text-zinc-500">
-                Use Browse tags to apply one or more tags.
-              </p>
-            )}
 
-            {isTagBrowserOpen ? (
-              <div className="mt-3 rounded-xl border border-zinc-200 bg-white p-3">
+              <div className="mb-4 rounded-2xl border border-zinc-200 bg-white/80 p-3">
                 <div className="flex flex-wrap items-center gap-2">
-                  <input
-                    type="search"
-                    value={tagSearchText}
-                    onChange={(event) => setTagSearchText(event.target.value)}
-                    placeholder="Search tags..."
-                    className="min-w-[220px] flex-1 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-zinc-900"
-                  />
+                  <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-zinc-500">
+                    Tag filters
+                  </p>
+                  <span className="rounded-full bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-600">
+                    {selectedTags.length} selected
+                  </span>
                   <button
                     type="button"
-                    onClick={() => setTagFilterMode('all')}
-                    className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
-                      tagFilterMode === 'all'
-                        ? 'bg-zinc-900 text-white'
-                        : 'border border-zinc-300 bg-white text-zinc-700 hover:border-zinc-500 hover:text-zinc-900'
-                    }`}
+                    onClick={() => setIsTagBrowserOpen((current) => !current)}
+                    className="rounded-full border border-zinc-300 px-3 py-1 text-xs font-medium text-zinc-600 transition hover:border-zinc-500 hover:text-zinc-900"
                   >
-                    Match all
+                    {isTagBrowserOpen ? 'Hide tag list' : 'Browse tags'}
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setTagFilterMode('any')}
-                    className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
-                      tagFilterMode === 'any'
-                        ? 'bg-zinc-900 text-white'
-                        : 'border border-zinc-300 bg-white text-zinc-700 hover:border-zinc-500 hover:text-zinc-900'
-                    }`}
-                  >
-                    Match any
-                  </button>
+                  {selectedTags.length > 0 ? (
+                    <button
+                      type="button"
+                      onClick={handleClearTags}
+                      className="rounded-full border border-zinc-300 px-3 py-1 text-xs font-medium text-zinc-600 transition hover:border-zinc-500 hover:text-zinc-900"
+                    >
+                      Clear tags
+                    </button>
+                  ) : null}
                 </div>
 
-                <div className="mt-3 max-h-64 space-y-3 overflow-y-auto pr-1">
-                  {filteredTagGroupOptions.length === 0 ? (
-                    <p className="text-sm text-zinc-500">No tags match that search.</p>
-                  ) : (
-                    filteredTagGroupOptions.map((group) => (
-                      <div key={group.group}>
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
-                          {group.label}
-                        </p>
-                        <div className="mt-2 flex flex-wrap gap-2">
-                          {group.tags.map((tagOption) => {
-                            const isSelected = selectedTagSet.has(tagOption.tag)
-                            return (
-                              <button
-                                key={tagOption.tag}
-                                type="button"
-                                onClick={() => handleToggleTag(tagOption.tag)}
-                                className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
-                                  isSelected
-                                    ? 'border-zinc-900 bg-zinc-900 text-white'
-                                    : 'border-zinc-300 bg-white text-zinc-700 hover:border-zinc-500 hover:text-zinc-900'
-                                }`}
-                              >
-                                {tagOption.label} ({tagOption.count})
-                              </button>
-                            )
-                          })}
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
+                {selectedTags.length > 0 ? (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {selectedTags.map((tag) => (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => handleToggleTag(tag)}
+                        className="rounded-full border border-zinc-900 bg-zinc-900 px-3 py-1 text-xs font-medium text-white transition hover:bg-zinc-700"
+                      >
+                        {getCameraTagLabel(tag)} ×
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="mt-2 text-xs text-zinc-500">
+                    Use Browse tags to apply one or more tags.
+                  </p>
+                )}
+
+                {isTagBrowserOpen ? (
+                  <div className="mt-3 rounded-xl border border-zinc-200 bg-white p-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <input
+                        type="search"
+                        value={tagSearchText}
+                        onChange={(event) => setTagSearchText(event.target.value)}
+                        placeholder="Search tags..."
+                        className="min-w-[220px] flex-1 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-zinc-900"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setTagFilterMode('all')}
+                        className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
+                          tagFilterMode === 'all'
+                            ? 'bg-zinc-900 text-white'
+                            : 'border border-zinc-300 bg-white text-zinc-700 hover:border-zinc-500 hover:text-zinc-900'
+                        }`}
+                      >
+                        Match all
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setTagFilterMode('any')}
+                        className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
+                          tagFilterMode === 'any'
+                            ? 'bg-zinc-900 text-white'
+                            : 'border border-zinc-300 bg-white text-zinc-700 hover:border-zinc-500 hover:text-zinc-900'
+                        }`}
+                      >
+                        Match any
+                      </button>
+                    </div>
+
+                    <div className="mt-3 max-h-64 space-y-3 overflow-y-auto pr-1">
+                      {filteredTagGroupOptions.length === 0 ? (
+                        <p className="text-sm text-zinc-500">No tags match that search.</p>
+                      ) : (
+                        filteredTagGroupOptions.map((group) => (
+                          <div key={group.group}>
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                              {group.label}
+                            </p>
+                            <div className="mt-2 flex flex-wrap gap-2">
+                              {group.tags.map((tagOption) => {
+                                const isSelected = selectedTagSet.has(tagOption.tag)
+                                return (
+                                  <button
+                                    key={tagOption.tag}
+                                    type="button"
+                                    onClick={() => handleToggleTag(tagOption.tag)}
+                                    className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
+                                      isSelected
+                                        ? 'border-zinc-900 bg-zinc-900 text-white'
+                                        : 'border-zinc-300 bg-white text-zinc-700 hover:border-zinc-500 hover:text-zinc-900'
+                                    }`}
+                                  >
+                                    {tagOption.label} ({tagOption.count})
+                                  </button>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                ) : null}
               </div>
-            ) : null}
-          </div>
 
-          <label
-            htmlFor="camera-search"
-            className="mb-2 block font-mono text-xs uppercase tracking-[0.2em] text-zinc-500"
-          >
-            Find camera
-          </label>
-          <input
-            id="camera-search"
-            type="search"
-            value={searchText}
-            onChange={(event) => setSearchText(event.target.value)}
-            placeholder="Search by camera name, area, or tag"
-            className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-zinc-900 shadow-inner outline-none transition placeholder:text-zinc-400 focus:border-zinc-900"
-          />
+              <label
+                htmlFor="camera-search"
+                className="mb-2 block font-mono text-xs uppercase tracking-[0.2em] text-zinc-500"
+              >
+                Find camera
+              </label>
+              <input
+                id="camera-search"
+                type="search"
+                value={searchText}
+                onChange={(event) => setSearchText(event.target.value)}
+                placeholder="Search by camera name, area, or tag"
+                className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-zinc-900 shadow-inner outline-none transition placeholder:text-zinc-400 focus:border-zinc-900"
+              />
 
-          <div className="mt-4 flex flex-wrap gap-2">
-            {viewMode === 'streams' ? (
-              <>
-                <button
-                  type="button"
-                  onClick={handleToggleAllStreams}
-                  disabled={bulkControlledCameraIds.length === 0}
-                  className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-45"
-                >
-                  {allFilteredStreamsActive ? 'Stop filtered streams' : 'Start filtered streams'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSortByStatus((current) => !current)}
-                  className="rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:border-zinc-500 hover:text-zinc-900"
-                >
-                  {sortByStatus ? 'Sorting by status' : 'Sorting A-Z'}
-                </button>
-              </>
-            ) : (
-              <p className="text-xs text-zinc-500">Click a map marker to open its live stream.</p>
-            )}
-          </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {viewMode === 'streams' ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={handleToggleAllStreams}
+                      disabled={bulkControlledCameraIds.length === 0}
+                      className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-45"
+                    >
+                      {allFilteredStreamsActive ? 'Stop filtered streams' : 'Start filtered streams'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSortByStatus((current) => !current)}
+                      className="rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:border-zinc-500 hover:text-zinc-900"
+                    >
+                      {sortByStatus ? 'Sorting by status' : 'Sorting A-Z'}
+                    </button>
+                  </>
+                ) : (
+                  <p className="text-xs text-zinc-500">Click a map marker to open its live stream.</p>
+                )}
+              </div>
+            </>
+          )}
         </section>
 
-        {viewMode === 'map' ? (
+        {viewMode === 'highways' ? (
+          <HighwayConditionsPanel />
+        ) : viewMode === 'map' ? (
           <CameraMap
             cameras={sortedCameras}
             runtimeStatusById={streamControllerState.runtimeById}
